@@ -1,0 +1,30 @@
+## ide
+**/.idea
+*.iml
+rebel.xml
+
+## backend
+**/target
+**/logs
+
+## front
+**/*.lock
+**/node_modules
+**/dist
+**/.cache
+**/.local
+**/.eslintcache
+**/.pnpm-store
+**/.yarn
+**/.npm
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+os_del.cmd
+os_del_doc.cmd
+.svn
+derby.log
+.cursor
+.history
+.claude
