@@ -40,6 +40,9 @@ public class TaolinkShop extends JeecgEntity implements Serializable {
     @Schema(description = "绑定人用户ID（JeecgBoot sys_user.id）")
     private String ownerId;
 
+    @Schema(description = "租户ID")
+    private String tenantId;
+
     @Schema(description = "备注")
     private String remark;
 

@@ -23,7 +23,7 @@
 
       <!-- 操作区域 -->
       <div class="action-area">
-        <a-button type="primary" @click="handleAdd">绑定新店</a-button>
+        <a-button type="primary" @click="handleBindShop">绑定新店</a-button>
       </div>
 
       <!-- 店铺列表 -->
@@ -44,11 +44,12 @@
           <a-button type="link" @click="handleEdit(record)">编辑</a-button>
           <a-button type="link" danger @click="handleUnbind(record.id)">解绑</a-button>
           <a-button type="link" @click="handleDetail(record.id)">详情</a-button>
+          <a-button type="link" v-if="record.status === 'active'" @click="handleReauthorize(record.id)">重新授权</a-button>
         </template>
       </a-table>
     </a-card>
 
-    <!-- 绑定/编辑店铺对话框 -->
+    <!-- 编辑店铺对话框 -->
     <a-modal
       v-model:visible="modalVisible"
       :title="modalTitle"
@@ -56,20 +57,6 @@
       @cancel="handleModalCancel"
     >
       <a-form :model="formData" :rules="formRules" ref="formRef">
-        <a-form-item label="店铺名称" name="taobaoSellerNick">
-          <a-input v-model:value="formData.taobaoSellerNick" placeholder="请输入淘宝卖家昵称" />
-        </a-form-item>
-        <a-form-item label="API Session Key" name="apiSessionKey">
-          <a-input v-model:value="formData.apiSessionKey" placeholder="请输入淘宝开放平台Session Key" />
-        </a-form-item>
-        <a-form-item label="API授权过期时间" name="apiExpireAt">
-          <a-date-picker
-            v-model:value="formData.apiExpireAt"
-            format="YYYY-MM-DD HH:mm:ss"
-            show-time
-            style="width: 100%"
-          />
-        </a-form-item>
         <a-form-item label="状态" name="status">
           <a-select v-model:value="formData.status">
             <a-select-option value="active">活跃</a-select-option>
@@ -92,7 +79,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { shopApi } from '@/api/taolink/shop';
+import { useRouter } from 'vue-router';
+import { taolinkShopApi } from '@/api/taolink/shop';
 import { message } from 'ant-design-vue';
 
 // 搜索表单
@@ -118,16 +106,14 @@ const pagination = reactive({
 // 数据列表
 const dataList = ref<any[]>([]);
 const loading = ref(false);
+const router = useRouter();
 
 // 模态框
 const modalVisible = ref(false);
-const modalTitle = ref('绑定店铺');
+const modalTitle = ref('编辑店铺');
 const formRef = ref();
 const formData = reactive({
   id: '',
-  taobaoSellerNick: '',
-  apiSessionKey: '',
-  apiExpireAt: null,
   status: 'active',
   bindPlatforms: [],
   remark: '',
@@ -135,9 +121,6 @@ const formData = reactive({
 
 // 表单规则
 const formRules = {
-  taobaoSellerNick: [{ required: true, message: '请输入店铺名称', trigger: 'blur' }],
-  apiSessionKey: [{ required: true, message: '请输入API Session Key', trigger: 'blur' }],
-  apiExpireAt: [{ required: true, message: '请选择API授权过期时间', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 };
 
@@ -150,7 +133,7 @@ const loadShopList = async () => {
       pageNo: pagination.current,
       pageSize: pagination.pageSize,
     };
-    const res = await shopApi.getShopList(params);
+    const res = await taolinkShopApi.list(params);
     if (res.success) {
       dataList.value = res.result.records;
       pagination.total = res.result.total;
@@ -176,19 +159,18 @@ const resetForm = () => {
   loadShopList();
 };
 
-// 新增
-const handleAdd = () => {
-  modalTitle.value = '绑定店铺';
-  Object.assign(formData, {
-    id: '',
-    taobaoSellerNick: '',
-    apiSessionKey: '',
-    apiExpireAt: null,
-    status: 'active',
-    bindPlatforms: [],
-    remark: '',
-  });
-  modalVisible.value = true;
+// 绑定店铺
+const handleBindShop = async () => {
+  try {
+    const res = await taolinkShopApi.getAuthorizeUrl({});
+    if (res.success) {
+      window.location.href = res.result;
+    } else {
+      message.error('获取授权链接失败');
+    }
+  } catch (error) {
+    message.error('网络错误，请稍后重试');
+  }
 };
 
 // 编辑
@@ -209,7 +191,7 @@ const handleEdit = (record: any) => {
 // 解绑
 const handleUnbind = async (id: string) => {
   try {
-    const res = await shopApi.unbindShop(id);
+    const res = await taolinkShopApi.unbind({ id });
     if (res.success) {
       message.success('解绑成功');
       loadShopList();
@@ -222,7 +204,21 @@ const handleUnbind = async (id: string) => {
 // 查看详情
 const handleDetail = (id: string) => {
   // 跳转到详情页
-  console.log('查看详情:', id);
+  router.push(`/taolink/shop/detail/${id}`);
+};
+
+// 重新授权
+const handleReauthorize = async (id: string) => {
+  try {
+    const res = await taolinkShopApi.reauthorize({ id });
+    if (res.success) {
+      window.location.href = res.result;
+    } else {
+      message.error('获取授权链接失败');
+    }
+  } catch (error) {
+    message.error('网络错误，请稍后重试');
+  }
 };
 
 // 模态框确定
@@ -235,14 +231,9 @@ const handleModalOk = async () => {
       ...formData,
       bindPlatforms: JSON.stringify(formData.bindPlatforms),
     };
-    let res;
-    if (formData.id) {
-      res = await shopApi.editShop(submitData);
-    } else {
-      res = await shopApi.bindShop(submitData);
-    }
+    const res = await taolinkShopApi.edit(submitData);
     if (res.success) {
-      message.success(formData.id ? '编辑成功' : '绑定成功');
+      message.success('编辑成功');
       modalVisible.value = false;
       loadShopList();
     }

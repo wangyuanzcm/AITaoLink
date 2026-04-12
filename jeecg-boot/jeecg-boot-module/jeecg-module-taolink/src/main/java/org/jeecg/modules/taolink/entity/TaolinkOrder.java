@@ -39,5 +39,8 @@ public class TaolinkOrder extends JeecgEntity implements Serializable {
 
     @Schema(description = "淘宝原始回包JSON（字符串）")
     private String rawJson;
+
+    @Schema(description = "订单总金额")
+    private Integer totalAmount;
 }
 

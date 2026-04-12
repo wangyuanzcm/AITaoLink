@@ -6,15 +6,21 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.modules.taolink.entity.TaolinkShop;
+import org.jeecg.modules.taolink.integrations.taobao.TaobaoOauthClient;
 import org.jeecg.modules.taolink.service.ITaolinkShopService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.UUID;
 
 @Slf4j
 @Tag(name = "TaoLink-店铺")
@@ -23,6 +29,8 @@ import jakarta.servlet.http.HttpServletRequest;
 public class TaolinkShopController extends JeecgController<TaolinkShop, ITaolinkShopService> {
     @Autowired
     private ITaolinkShopService taolinkShopService;
+    @Autowired
+    private TaobaoOauthClient taobaoOauthClient;
 
     @Operation(summary = "店铺列表")
     @GetMapping(value = "/list")
@@ -44,6 +52,91 @@ public class TaolinkShopController extends JeecgController<TaolinkShop, ITaolink
             return Result.error("未找到对应数据");
         }
         return Result.OK(entity);
+    }
+
+    @Operation(summary = "获取授权URL")
+    @GetMapping(value = "/authorizeUrl")
+    public Result<String> getAuthorizeUrl(HttpServletRequest req) {
+        // 生成随机state参数
+        String state = UUID.randomUUID().toString();
+        // 存储state到session，用于回调时验证
+        req.getSession().setAttribute("taobao_oauth_state", state);
+        // 生成授权URL
+        String authorizeUrl = taobaoOauthClient.generateAuthorizeUrl(state);
+        return Result.OK(authorizeUrl);
+    }
+
+    @Operation(summary = "OAuth回调")
+    @GetMapping(value = "/oauthCallback")
+    public void oauthCallback(@RequestParam(name = "code") String code,
+                              @RequestParam(name = "state") String state,
+                              HttpServletRequest req,
+                              HttpServletResponse resp) throws IOException {
+        // 验证state参数
+        String storedState = (String) req.getSession().getAttribute("taobao_oauth_state");
+        if (!state.equals(storedState)) {
+            resp.sendRedirect("/taolink/shop?error=invalid_state");
+            return;
+        }
+
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+            if (loginUser == null) {
+                resp.sendRedirect("/taolink/shop?error=not_login");
+                return;
+            }
+
+            // 通过授权码获取令牌
+            TaobaoOauthClient.TaobaoTokenInfo tokenInfo = taobaoOauthClient.getToken(code);
+            if (tokenInfo == null) {
+                resp.sendRedirect("/taolink/shop?error=token_failed");
+                return;
+            }
+
+            // 构建店铺信息
+            TaolinkShop shop = taobaoOauthClient.buildShopInfo(tokenInfo, loginUser.getUsername(), loginUser.getId());
+
+            // 检查是否已绑定
+            QueryWrapper<TaolinkShop> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("taobao_seller_nick", shop.getTaobaoSellerNick());
+            queryWrapper.eq("owner_id", loginUser.getId());
+            TaolinkShop existingShop = taolinkShopService.getOne(queryWrapper);
+
+            if (existingShop != null) {
+                // 更新现有店铺
+                existingShop.setApiSessionKey(shop.getApiSessionKey());
+                existingShop.setApiExpireAt(shop.getApiExpireAt());
+                existingShop.setStatus("active");
+                taolinkShopService.updateById(existingShop);
+            } else {
+                // 保存新店铺
+                taolinkShopService.save(shop);
+            }
+
+            // 重定向到店铺列表页
+            resp.sendRedirect("/taolink/shop?success=true");
+        } catch (Exception e) {
+            log.error("OAuth回调处理失败", e);
+            resp.sendRedirect("/taolink/shop?error=callback_failed");
+        }
+    }
+
+    @Operation(summary = "重新授权")
+    @PostMapping(value = "/{id}/reauthorize")
+    public Result<String> reauthorize(@PathVariable(name = "id") String id, HttpServletRequest req) {
+        TaolinkShop shop = taolinkShopService.getById(id);
+        if (shop == null) {
+            return Result.error("未找到对应店铺");
+        }
+
+        // 生成随机state参数，并包含店铺ID
+        String state = UUID.randomUUID().toString() + "_" + id;
+        // 存储state到session
+        req.getSession().setAttribute("taobao_oauth_state", state);
+        // 生成授权URL
+        String authorizeUrl = taobaoOauthClient.generateAuthorizeUrl(state);
+        return Result.OK(authorizeUrl);
     }
 
     @Operation(summary = "绑定店铺")
