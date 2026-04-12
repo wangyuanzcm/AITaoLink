@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.jeecg.common.api.vo.Result;
@@ -70,6 +71,22 @@ public class TaolinkPurchaseController extends JeecgController<TaolinkPurchase, 
             return Result.error("未找到对应数据");
         }
         return Result.OK(entity);
+    }
+
+    @Data
+    public static class TrackingRequest {
+        private String sourceTrackingCompany;
+        private String sourceTrackingNo;
+        private Double freightCost;
+        private String remark;
+    }
+
+    @Operation(summary = "代发订单发货回填")
+    @PostMapping(value = "/{lineId}/fillTracking")
+    @RequiresPermissions("taolink:purchase:fillTracking")
+    public Result<String> fillTracking(@PathVariable String lineId, @RequestBody TrackingRequest req) {
+        return taolinkPurchaseService.fillTracking(lineId, req.getSourceTrackingCompany(), 
+                req.getSourceTrackingNo(), req.getFreightCost(), req.getRemark());
     }
 }
 

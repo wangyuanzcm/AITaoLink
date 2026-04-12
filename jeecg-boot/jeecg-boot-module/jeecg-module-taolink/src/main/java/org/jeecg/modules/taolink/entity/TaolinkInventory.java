@@ -23,14 +23,18 @@ public class TaolinkInventory extends JeecgEntity implements Serializable {
 
     @Schema(description = "内部SKU ID")
     private String productSkuId;
-
     @Schema(description = "现有库存", example = "0")
     private Integer onHand;
 
     @Schema(description = "预占库存", example = "0")
     private Integer reserved;
 
-    @TableField(exist = false)
+    @Schema(description = "低库存预警阈值（>0则覆盖全局默认）", example = "0")
+    private Integer warningMin;
+
+    @Schema(description = "积压天数阈值，>0则覆盖全局默认（默认30天）", example = "30")
+    private Integer overstockDays;
+
     @Schema(description = "可用库存（计算字段）", example = "0")
     public Integer getAvailable() {
         int onHandVal = onHand == null ? 0 : onHand;

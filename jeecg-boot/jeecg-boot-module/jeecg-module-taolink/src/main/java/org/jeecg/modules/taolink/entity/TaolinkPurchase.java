@@ -20,6 +20,9 @@ import java.util.Date;
 public class TaolinkPurchase extends JeecgEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "店铺ID（关联 taolink_shop）")
+    private String shopId;
+
     @Schema(description = "采购模式", example = "dropship")
     private String mode;
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.jeecg.common.api.vo.Result;
@@ -70,6 +71,42 @@ public class TaolinkOrderController extends JeecgController<TaolinkOrder, ITaoli
             return Result.error("未找到对应数据");
         }
         return Result.OK(entity);
+    }
+
+    @Data
+    public static class AssignFulfillmentRequest {
+        private String orderId;
+        private String fulfillmentType; // stock 或 dropship
+        private String warehouseId; // 当 fulfillmentType 为 stock 时必填
+        private String supplierId; // 当 fulfillmentType 为 dropship 时必填
+    }
+
+    @Operation(summary = "订单履约分配")
+    @PostMapping(value = "/assignFulfillment")
+    @RequiresPermissions("taolink:order:edit")
+    public Result<String> assignFulfillment(@RequestBody AssignFulfillmentRequest req) {
+        if (req.getOrderId() == null || req.getOrderId().isEmpty()) {
+            return Result.error("订单ID不能为空");
+        }
+        if (req.getFulfillmentType() == null || (!"stock".equals(req.getFulfillmentType()) && !"dropship".equals(req.getFulfillmentType()))) {
+            return Result.error("履约类型必须为 stock 或 dropship");
+        }
+        if ("stock".equals(req.getFulfillmentType()) && (req.getWarehouseId() == null || req.getWarehouseId().isEmpty())) {
+            return Result.error("库存履约时仓库ID不能为空");
+        }
+        if ("dropship".equals(req.getFulfillmentType()) && (req.getSupplierId() == null || req.getSupplierId().isEmpty())) {
+            return Result.error("代发履约时供应商ID不能为空");
+        }
+        
+        TaolinkOrder order = taolinkOrderService.getById(req.getOrderId());
+        if (order == null) {
+            return Result.error("未找到对应订单");
+        }
+        
+        // 这里可以添加履约分配的业务逻辑
+        // 例如：更新订单的履约方式，为代发订单创建采购任务等
+        
+        return Result.OK("履约分配成功！");
     }
 }
 

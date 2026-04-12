@@ -20,6 +20,9 @@ import java.util.Date;
 public class TaolinkSourceOffer extends JeecgEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "关联店铺ID（可选，1688货源可跨店共享）")
+    private String shopId;
+
     @Schema(description = "来源平台", example = "1688")
     private String platform;
 

@@ -17,6 +17,9 @@ import java.io.Serializable;
 public class TaolinkTicket extends JeecgEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "关联店铺ID（继承父订单）")
+    private String shopId;
+
     @Schema(description = "订单ID")
     private String orderId;
 

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8890
   tomcat:
     max-swallow-size: -1
   error:
@@ -151,7 +151,7 @@ spring:
           slow-sql-millis: 5000
       datasource:
         master:
-          url: jdbc:mysql://127.0.0.1:3306/jeecg-boot?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+          url: jdbc:mysql://127.0.0.1:3306/tao-link?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
           username: root
           password: root
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -165,7 +165,7 @@ spring:
       database: 0
       host: 127.0.0.1
       port: 6379
-      password:
+      password: 123456
 #mybatis plus 设置
 mybatis-plus:
   mapper-locations: classpath*:org/jeecg/**/xml/*Mapper.xml
@@ -217,6 +217,8 @@ jeecg:
     lowCodeMode: dev
     # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
     is-concurrent: true
+    # 登录验证码
+    # enableLoginCaptcha: false
   # 签名密钥串(前后端要一致，正式发布请自行修改)
   signatureSecret: dd05f1c54d63749eda95f9fa6d49v442a
   #签名拦截接口

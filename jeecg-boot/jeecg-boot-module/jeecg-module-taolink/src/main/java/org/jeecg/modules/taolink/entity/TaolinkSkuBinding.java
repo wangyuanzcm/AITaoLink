@@ -17,6 +17,9 @@ import java.io.Serializable;
 public class TaolinkSkuBinding extends JeecgEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "关联店铺ID")
+    private String shopId;
+
     @Schema(description = "内部SKU ID")
     private String productSkuId;
 

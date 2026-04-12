@@ -127,5 +127,30 @@ public class TaolinkInventoryController extends JeecgController<TaolinkInventory
             return Result.OK();
         }
     }
+
+    @Operation(summary = "库存分析总览")
+    @GetMapping(value = "/analysis/overview")
+    public Result<java.util.Map<String, Object>> inventoryAnalysisOverview() {
+        return taolinkInventoryService.getInventoryAnalysisOverview();
+    }
+
+    @Operation(summary = "库存分析指标")
+    @GetMapping(value = "/analysis/metrics")
+    public Result<java.util.Map<String, Object>> inventoryAnalysisMetrics() {
+        return taolinkInventoryService.getInventoryAnalysisMetrics();
+    }
+
+    @Data
+    public static class ThresholdRequest {
+        private Integer warningMin;
+        private Integer overstockDays;
+    }
+
+    @Operation(summary = "设置SKU预警阈值")
+    @PutMapping(value = "/{id}/threshold")
+    @RequiresPermissions("taolink:inventory:threshold")
+    public Result<String> updateThreshold(@PathVariable String id, @RequestBody ThresholdRequest req) {
+        return taolinkInventoryService.updateThreshold(id, req.getWarningMin(), req.getOverstockDays());
+    }
 }
 

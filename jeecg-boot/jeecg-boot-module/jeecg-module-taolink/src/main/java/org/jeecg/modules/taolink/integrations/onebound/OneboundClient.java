@@ -40,5 +40,30 @@ public class OneboundClient {
         JSONObject json = RestUtil.get(url);
         return Result.OK(json);
     }
+
+    /**
+     * 搜索1688商品
+     * @param keyword 搜索关键词
+     * @param pageNo 页码
+     * @param pageSize 每页数量
+     * @return 搜索结果
+     */
+    public JSONObject search1688Products(String keyword, Integer pageNo, Integer pageSize) {
+        if (oConvertUtils.isEmpty(apiKey)) {
+            return null;
+        }
+        if (oConvertUtils.isEmpty(keyword)) {
+            return null;
+        }
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/1688/item_search")
+                .queryParam("key", apiKey)
+                .queryParam("q", keyword)
+                .queryParam("page", pageNo)
+                .queryParam("page_size", pageSize)
+                .build(true)
+                .toUriString();
+        return RestUtil.get(url);
+    }
 }
 

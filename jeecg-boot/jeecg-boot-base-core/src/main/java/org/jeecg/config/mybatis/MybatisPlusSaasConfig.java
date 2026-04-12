@@ -130,6 +130,17 @@ public class MybatisPlusSaasConfig {
                 }
             }));
         }
+        
+        // 添加TaoLink模块的租户/店铺数据隔离拦截器
+        try {
+            Class<?> tenantShopInterceptorClass = Class.forName("org.jeecg.modules.taolink.config.TenantShopInterceptor");
+            Object tenantShopInterceptor = tenantShopInterceptorClass.newInstance();
+            interceptor.addInnerInterceptor(new TenantLineInnerInterceptor((com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler) tenantShopInterceptor));
+            log.info("TaoLink租户/店铺数据隔离拦截器注册成功");
+        } catch (Exception e) {
+            log.warn("TaoLink租户/店铺数据隔离拦截器注册失败，可能模块未加载: {}", e.getMessage());
+        }
+        
         //update-begin-author:zyf date:20220425 for:【VUEN-606】注入动态表名适配拦截器解决多表名问题
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor());
         //update-end-author:zyf date:20220425 for:【VUEN-606】注入动态表名适配拦截器解决多表名问题
