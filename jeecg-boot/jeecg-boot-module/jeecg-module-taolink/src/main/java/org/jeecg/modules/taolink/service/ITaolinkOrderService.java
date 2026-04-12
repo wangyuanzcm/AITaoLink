@@ -25,5 +25,31 @@ public interface ITaolinkOrderService extends JeecgService<TaolinkOrder> {
      * @return 操作结果
      */
     Result<String> shipOrderWithDeduct(String orderId);
+
+    /**
+     * 统计当日订单数
+     */
+    int countTodayOrders();
+
+    /**
+     * 统计当日GMV
+     */
+    int calculateTodayGmv();
+
+    /**
+     * 统计订单异常预警
+     */
+    long countOrderAlerts();
+
+    /**
+     * 统计退款异常预警
+     */
+    long countRefundAlerts();
+
+    /**
+     * 获取全局趋势数据
+     * @param days 统计天数
+     */
+    java.util.List<java.util.Map<String, Object>> getGlobalTrend(Integer days);
 }
 

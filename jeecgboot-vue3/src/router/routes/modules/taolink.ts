@@ -24,20 +24,11 @@ const taolink: AppRouteModule = {
       },
     },
     {
-      path: 'product',
-      name: 'TaoLinkProduct',
-      component: () => import('/@/views/taolink/product/index.vue'),
+      path: 'order-shipment',
+      name: 'TaoLinkOrderShipment',
+      component: () => import('/@/views/taolink/order/shipment.vue'),
       meta: {
-        title: '商品管理',
-        icon: 'icon-goods',
-      },
-    },
-    {
-      path: 'order',
-      name: 'TaoLinkOrder',
-      component: () => import('/@/views/taolink/order/index.vue'),
-      meta: {
-        title: '订单管理',
+        title: '订单发货',
         icon: 'icon-order',
       },
     },
@@ -92,17 +83,26 @@ const taolink: AppRouteModule = {
       component: () => import('/@/views/taolink/monitor/index.vue'),
       meta: {
         title: '店铺监控',
-        icon: 'icon-monitor',
-      },
-    },
-    {
-      path: 'dashboard',
-      name: 'TaoLinkDashboard',
-      component: () => import('/@/views/taolink/dashboard/index.vue'),
-      meta: {
-        title: '全局看板',
         icon: 'icon-dashboard',
       },
+      children: [
+        {
+          path: 'rankings',
+          name: 'TaoLinkMonitorRankings',
+          component: () => import('/@/views/taolink/monitor/rankings.vue'),
+          meta: {
+            title: '商品排行榜',
+          },
+        },
+        {
+          path: 'alerts',
+          name: 'TaoLinkMonitorAlerts',
+          component: () => import('/@/views/taolink/monitor/alerts.vue'),
+          meta: {
+            title: '异常告警',
+          },
+        },
+      ],
     },
   ],
 };

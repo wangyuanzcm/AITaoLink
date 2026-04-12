@@ -75,5 +75,10 @@ public class TaolinkProductServiceImpl extends ServiceImpl<TaolinkProductMapper,
         inventory.setOverstockDays(30); // 默认积压天数阈值
         inventoryService.save(inventory);
     }
+
+    @Override
+    public long countListedProducts() {
+        return lambdaQuery().eq(TaolinkProduct::getListingStatus, "listed").count();
+    }
 }
 

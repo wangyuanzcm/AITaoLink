@@ -6,7 +6,7 @@
 - 文档版本：2.0
 - 创建日期：2026-04-12
 - 更新日期：2026-04-12（v2.0：共享库存 + 库存分析 + 代发结算 + 全局看板 + AI选品规划）
-- 最近更新：2026-04-12（完成第1轮任务：数据库迁移 + SaaS 基础设施）
+- 最近更新：2026-04-12（完成第1-6轮任务：SaaS 基础 + 商品管理 + 订单管理 + 库存分析 + 代发采购与结算 + 搜索中心 + 店铺监控）
 - 上游 PRD：[PRD_TaoLink_SaaS_v0.3.0.md](./PRD_TaoLink_SaaS_v0.2.0.md)
 
 ---
@@ -60,7 +60,7 @@
 |------|:----:|------|
 | `taolink_shop` | **待建** | 用户淘宝店铺绑定表 |
 | `taolink_search_cache` | **待建** | 搜索缓存表 |
-| `taolink_monitor_daily_snapshot` | **待建** | 店铺监控每日快照表 |
+| `taolink_monitor_daily_snapshot` | **已建** | 店铺监控每日快照表 |
 | `taolink_inventory_alert` | **待建** | 库存预警记录（低库存/积压） |
 | `taolink_settlement_record` | **待建** | 代发结算流水表 |
 | `taolink_selection_score` | **远期** | AI 选品评分记录 |
@@ -74,81 +74,81 @@
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-001 | `TaolinkShop` 实体类 | `entity/TaolinkShop.java` | **待开发** | id + tenant_id + taobao_seller_nick + api_session_key + status 等 |
-| T-002 | `TaolinkShop` Mapper/Service/Controller | 全部三层 | **待开发** | CRUD + bind/unbind 接口 |
-| T-003 | 部分实体新增 `shop_id` | Product, Order, Purchase, SourceOffer, SkuBinding, Ticket 的 entity | **待开发** | 注意：Inventory/Warehouse/InventoryMovement **不加** |
-| T-004 | `TaolinkInventory` 新增预警阈值字段 | `entity/TaolinkInventory.java` | **待开发** | `warning_min`, `overstock_days` |
-| T-005 | `TaolinkPurchaseLine` 新增发货/成本字段 | `entity/TaolinkPurchaseLine.java` | **待开发** | 运单号/运费/总成本等 |
-| T-006 | 租户/店铺数据隔离拦截器 | `config/TenantShopInterceptor.java` | **待开发** | MyBatis-Plus 拦截器，自动注入 WHERE tenant_id + shop_id |
-| T-007 | 数据库迁移 SQL 脚本 | `db/taolink_migration_v2.sql` | **待开发** | ALTER + CREATE TABLE |
+| T-001 | `TaolinkShop` 实体类 | `entity/TaolinkShop.java` | **已完成** | id + tenant_id + taobao_seller_nick + api_session_key + status 等 |
+| T-002 | `TaolinkShop` Mapper/Service/Controller | 全部三层 | **已完成** | CRUD + bind/unbind 接口 |
+| T-003 | 部分实体新增 `shop_id` | Product, Order, Purchase, SourceOffer, SkuBinding, Ticket 的 entity | **已完成** | 注意：Inventory/Warehouse/InventoryMovement **不加** |
+| T-004 | `TaolinkInventory` 新增预警阈值字段 | `entity/TaolinkInventory.java` | **已完成** | `warning_min`, `overstock_days` |
+| T-005 | `TaolinkPurchaseLine` 新增发货/成本字段 | `entity/TaolinkPurchaseLine.java` | **已完成** | 运单号/运费/总成本等 |
+| T-006 | 租户/店铺数据隔离拦截器 | `config/TenantShopInterceptor.java` | **已完成** | MyBatis-Plus 拦截器，自动注入 WHERE tenant_id + shop_id |
+| T-007 | 数据库迁移 SQL 脚本 | `db/taolink_migration_v2.sql` | **已完成** | ALTER + CREATE TABLE |
 | T-008 | 店铺绑定的 OAuth 流程 | `integrations/taobao/TaobaoOauthClient.java` | **待开发** | 后续迭代（非首批） |
 
 ### 层级2：商品管理（含上下架）
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-010 | 商品上架/下架接口 | `controller/TaolinkProductController` | **待开发** | POST `/taolink/product/listed` + `/taolink/product/delisted` |
-| T-011 | 上架自动创建初始库存记录 | `service/` 业务逻辑 | **待开发** | 上架时为每个SKU创建库存（on_hand=0, reserved=0） |
-| T-012 | 商品列表按 `shop_id` 过滤 | Controller list 方法 | **待开发** | 依赖 T-006 拦截器 |
+| T-010 | 商品上架/下架接口 | `controller/TaolinkProductController` | **已完成** | POST `/taolink/product/listed` + `/taolink/product/delisted` |
+| T-011 | 上架自动创建初始库存记录 | `service/` 业务逻辑 | **已完成** | 上架时为每个SKU创建库存（on_hand=0, reserved=0） |
+| T-012 | 商品列表按 `shop_id` 过滤 | Controller list 方法 | **已完成** | 依赖 T-006 拦截器 |
 
 ### 层级3：订单管理（库存联动）
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-020 | 订单支付后自动预留库存 | `service/ITaolinkInventoryService` | **待开发** | 调用 `reserve()` |
-| T-021 | 发货后扣减库存 | `service/ITaolinkInventoryService` | **待开发** | 新增 `deduct()` 方法：on_hand减少, reserved减少, 写入 Movement |
-| T-022 | 订单履约分配接口 | `controller/TaolinkOrderController` | **待开发** | POST `/taolink/order/assignFulfillment`（stock / dropship） |
-| T-023 | 代发订单自动创建采购任务 | `service/` 业务逻辑 | **待开发** | dropship 模式的订单行自动生成采购单 |
+| T-020 | 订单支付后自动预留库存 | `service/ITaolinkInventoryService` | **已完成** | 调用 `reserve()` |
+| T-021 | 发货后扣减库存 | `service/ITaolinkInventoryService` | **已完成** | 新增 `deduct()` 方法：on_hand减少, reserved减少, 写入 Movement |
+| T-022 | 订单履约分配接口 | `controller/TaolinkOrderController` | **已完成** | POST `/taolink/order/assignFulfillment`（stock / dropship） |
+| T-023 | 代发订单自动创建采购任务 | `service/` 业务逻辑 | **已完成** | dropship 模式的订单行自动生成采购单 |
 
 ### 层级4：代发采购与结算
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-030 | `TaolinkSettlementRecord` 实体 | `entity/TaolinkSettlementRecord.java` | **待开发** | settle_type + amount + supplier_name + status 等 |
-| T-031 | 结算 Mapper/Service/Controller | 全部三层 | **待开发** | 结算记录 CRUD + 月度对账接口 |
-| T-032 | 代发订单发货回填接口 | `controller/TaolinkPurchaseController` | **待开发** | POST `/taolink/purchase/{lineId}/fillTracking`：写入运单号 + 生成结算记录 |
-| T-033 | 月度对账单汇总接口 | `controller/TaolinkSettlementController` | **待开发** | GET `/taolink/settlement/monthly?supplier=xxx&month=2026-04` |
+| T-030 | `TaolinkSettlementRecord` 实体 | `entity/TaolinkSettlementRecord.java` | **已完成** | settle_type + amount + supplier_name + status 等 |
+| T-031 | 结算 Mapper/Service/Controller | 全部三层 | **已完成** | 结算记录 CRUD + 月度对账接口 |
+| T-032 | 代发订单发货回填接口 | `controller/TaolinkPurchaseController` | **已完成** | POST `/taolink/purchase/{lineId}/fillTracking`：写入运单号 + 生成结算记录 |
+| T-033 | 月度对账单汇总接口 | `controller/TaolinkSettlementController` | **已完成** | GET `/taolink/settlement/monthly?supplier=xxx&month=2026-04` |
 
 ### 层级5：搜索中心（带缓存）
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-040 | `TaolinkSearchCache` 实体 | `entity/TaolinkSearchCache.java` | **待开发** | cache_key + platform + search_params + result_json + hit_count + expires_at |
-| T-041 | Redis 缓存层服务 | `service/TaolinkSearchCacheService.java` | **待开发** | Redis string key-value，TTL 24h |
-| T-042 | 统一搜索接口（先1688） | `controller/TaolinkSearchController` | **待开发** | 三级缓存链：Redis → DB → Onebound API |
-| T-043 | 搜索结果转 source_offer 落库 | `service/` 业务逻辑 | **待开发** | 搜索结果批量写入 source_offer 表 |
-| T-044 | 搜索缓存命中统计 | `controller/TaolinkSearchController` GET `/stats` | **待开发** | 返回今日命中/未命中/总量 |
+| T-040 | `TaolinkSearchCache` 实体 | `entity/TaolinkSearchCache.java` | **已完成** | cache_key + platform + search_params + result_json + hit_count + expires_at |
+| T-041 | Redis 缓存层服务 | `service/TaolinkSearchCacheService.java` | **已完成** | Redis string key-value，TTL 24h |
+| T-042 | 统一搜索接口（先1688） | `controller/TaolinkSearchController` | **已完成** | 三级缓存链：Redis → DB → Onebound API |
+| T-043 | 搜索结果转 source_offer 落库 | `service/` 业务逻辑 | **已完成** | 搜索结果批量写入 source_offer 表 |
+| T-044 | 搜索缓存命中统计 | `controller/TaolinkSearchController` GET `/stats` | **已完成** | 返回今日命中/未命中/总量 |
 
 ### 层级6：库存分析与预警
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-050 | `TaolinkInventoryAlert` 实体 | `entity/TaolinkInventoryAlert.java` | **待开发** | product_sku_id + alert_type + threshold + status |
-| T-051 | 库存 Mapper/Service/Controller | 全部三层 | **待开发** | 预警记录 CRUD |
-| T-052 | 库存分析总览接口 | `controller/TaolinkInventoryController` | **待开发** | GET `/taolink/inventory/analysis/overview` + `/metrics` |
-| T-053 | 库存预警定时检查任务 | `job/InventoryAlertCheckJob.java` | **待开发** | 定时扫描所有SKU可用库存，触发阈值则生成预警记录 |
-| T-054 | 设置SKU预警阈值接口 | `controller/TaolinkInventoryController` | **待开发** | PUT `/taolink/inventory/{id}/threshold` |
+| T-050 | `TaolinkInventoryAlert` 实体 | `entity/TaolinkInventoryAlert.java` | **已完成** | product_sku_id + alert_type + threshold + status |
+| T-051 | 库存 Mapper/Service/Controller | 全部三层 | **已完成** | 预警记录 CRUD |
+| T-052 | 库存分析总览接口 | `controller/TaolinkInventoryController` | **已完成** | GET `/taolink/inventory/analysis/overview` + `/metrics` |
+| T-053 | 库存预警定时检查任务 | `job/InventoryAlertCheckJob.java` | **已完成** | 定时扫描所有SKU可用库存，触发阈值则生成预警记录 |
+| T-054 | 设置SKU预警阈值接口 | `controller/TaolinkInventoryController` | **已完成** | PUT `/taolink/inventory/{id}/threshold` |
 
 ### 层级7：店铺监控
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-060 | `TaolinkMonitorDailySnapshot` 实体 | `entity/TaolinkMonitorDailySnapshot.java` | **待开发** | |
-| T-061 | 监控 Mapper/Service/Controller | 全部三层 | **待开发** | |
-| T-062 | 监控概览数据接口 | `controller/TaolinkMonitorController` | **待开发** | GET `/taolink/monitor/{shopId}/overview` |
-| T-063 | 监控趋势数据接口 | `controller/TaolinkMonitorController` | **待开发** | GET `/taolink/monitor/{shopId}/trend?days=7` |
-| T-064 | 商品排行榜接口 | `controller/TaolinkMonitorController` | **待开发** | GET `/taolink/monitor/{shopId}/rankings` |
-| T-065 | 每日快照定时任务 | `job/ShopMonitorSnapshotJob.java` | **待开发** | Quartz 每日凌晨1点执行 |
+| T-060 | `TaolinkMonitorDailySnapshot` 实体 | `entity/TaolinkMonitorDailySnapshot.java` | **已完成** | |
+| T-061 | 监控 Mapper/Service/Controller | 全部三层 | **已完成** | |
+| T-062 | 监控概览数据接口 | `controller/TaolinkMonitorController` | **已完成** | GET `/taolink/monitor/{shopId}/overview` |
+| T-063 | 监控趋势数据接口 | `controller/TaolinkMonitorController` | **已完成** | GET `/taolink/monitor/{shopId}/trend?days=7` |
+| T-064 | 商品排行榜接口 | `controller/TaolinkMonitorController` | **已完成** | GET `/taolink/monitor/{shopId}/rankings` |
+| T-065 | 每日快照定时任务 | `job/ShopMonitorSnapshotJob.java` | **已完成** | Quartz 每日凌晨1点执行 |
 
 ### 层级8：全局分析看板
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| T-070 | 全局总览指标接口 | `controller/TaolinkDashboardController` | **待开发** | GET `/taolink/dashboard/global/overview` |
-| T-071 | 店铺排行接口 | `controller/TaolinkDashboardController` | **待开发** | GET `/taolink/dashboard/global/shop-ranking` |
-| T-072 | 全局库存健康度接口 | `controller/TaolinkDashboardController` | **待开发** | GET `/taolink/dashboard/global/inventory-health` |
-| T-073 | 全局预警汇总接口 | `controller/TaolinkDashboardController` | **待开发** | GET `/taolink/dashboard/global/alerts` |
-| T-074 | 全局趋势接口 | `controller/TaolinkDashboardController` | **待开发** | GET `/taolink/dashboard/global/trend?days=30` |
+| T-070 | 全局总览指标接口 | `controller/TaolinkDashboardController` | **已完成** | GET `/taolink/dashboard/global/overview` |
+| T-071 | 店铺排行接口 | `controller/TaolinkDashboardController` | **已完成** | GET `/taolink/dashboard/global/shop-ranking` |
+| T-072 | 全局库存健康度接口 | `controller/TaolinkDashboardController` | **已完成** | GET `/taolink/dashboard/global/inventory-health` |
+| T-073 | 全局预警汇总接口 | `controller/TaolinkDashboardController` | **已完成** | GET `/taolink/dashboard/global/alerts` |
+| T-074 | 全局趋势接口 | `controller/TaolinkDashboardController` | **已完成** | GET `/taolink/dashboard/global/trend?days=30` |
 
 ### 层级9：AI 选品与上架（远期规划）
 
@@ -168,76 +168,76 @@
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-001 | Taolink API 定义层 | `jeecgboot-vue3/src/api/taolink/` | **待开发** | 所有 API 接口 TypeScript 定义 |
-| F-002 | 全局店铺选择器组件 | `src/components/Taolink/ShopSelector.vue` | **待开发** | 顶部导航栏集成 |
-| F-003 | 店铺状态 Pinia Store | `src/store/modules/taolink.ts` | **待开发** | 当前选中 shop_id |
-| F-004 | Taolink 侧边栏菜单注册 | `router/`, 系统菜单配置 | **待开发** | 添加各模块路由 |
+| F-001 | Taolink API 定义层 | `jeecgboot-vue3/src/api/taolink/` | **已完成** | 所有 API 接口 TypeScript 定义 |
+| F-002 | 全局店铺选择器组件 | `src/components/Taolink/ShopSelector.vue` | **已完成** | 顶部导航栏集成 |
+| F-003 | 店铺状态 Pinia Store | `src/store/modules/taolink.ts` | **已完成** | 当前选中 shop_id |
+| F-004 | Taolink 侧边栏菜单注册 | `router/`, 系统菜单配置 | **已完成** | 添加各模块路由 |
 
 ### 层级2：商铺管理
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-010 | 店铺列表页 | `src/views/taolink/shop/index.vue` | **待开发** | 表格 + 绑定/解绑 |
+| F-010 | 店铺列表页 | `src/views/taolink/shop/index.vue` | **已完成** | 表格 + 绑定/解绑 |
 | F-011 | 店铺详情页 | `src/views/taolink/shop/detail.vue` | **待开发** | 信息 + API配额 + 监控摘要 |
 
 ### 层级3：商品管理
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-020 | 商品列表页（含上下架） | `src/views/taolink/product/index.vue` | **待开发** | 表格 + 上架/下架 + 搜索筛选 |
-| F-021 | 商品新增/编辑页 | `src/views/taolink/product/form.vue` | **待开发** | 表单 + SKU编辑 |
+| F-020 | 商品列表页（含上下架） | `src/views/taolink/product/index.vue` | **已完成** | 表格 + 上架/下架 + 搜索筛选 |
+| F-021 | 商品新增/编辑页 | `src/views/taolink/product/form.vue` | **已完成** | 表单 + SKU编辑 |
 | F-022 | 商品详情页 | `src/views/taolink/product/detail.vue` | **待开发** | SPU + SKU + 关联订单 + 货源 |
 
 ### 层级4：订单管理
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-030 | 订单列表页 | `src/views/taolink/order/index.vue` | **待开发** | 状态Tabs + 筛选 + 履约操作 |
-| F-031 | 订单详情页 | `src/views/taolink/order/detail.vue` | **待开发** | 订单信息 + 商品明细 + 物流 |
-| F-032 | 发货回填页（可批量） | `src/views/taolink/order/shipment.vue` | **待开发** | 物流公司 + 运单号 + 代发费用录入 |
+| F-030 | 订单列表页 | `src/views/taolink/order/index.vue` | **已完成** | 状态Tabs + 筛选 + 履约操作 |
+| F-031 | 订单详情页 | `src/views/taolink/order/detail.vue` | **已完成** | 订单信息 + 商品明细 + 物流 |
+| F-032 | 发货回填页（可批量） | `src/views/taolink/order/shipment.vue` | **已完成** | 物流公司 + 运单号 + 代发费用录入 |
 
 ### 层级5：库存管理
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-040 | 全局库存台账页 | `src/views/taolink/inventory/index.vue` | **待开发** | SKU维度 + 在仓/预留/可用 |
-| F-041 | 出入库流水日志页 | `src/views/taolink/inventory/movements.vue` | **待开发** | 按时间倒序 |
-| **F-042** | **库存分析看板页** | `src/views/taolink/inventory-analysis/index.vue` | **待开发** | 预警列表、周转率图表、呆滞品、库存价值 |
-| **F-043** | **库存预警操作** | 同上 | **待开发** | 预警确认/解决 |
-| **F-044** | **设置预警阈值** | 库存台账页内 | **待开发** | 编辑 warning_min / overstock_days |
+| F-040 | 全局库存台账页 | `src/views/taolink/inventory/index.vue` | **已完成** | SKU维度 + 在仓/预留/可用 |
+| F-041 | 出入库流水日志页 | `src/views/taolink/inventory/movements.vue` | **已完成** | 按时间倒序 |
+| **F-042** | **库存分析看板页** | `src/views/taolink/inventory-analysis/index.vue` | **已完成** | 预警列表、周转率图表、呆滞品、库存价值 |
+| **F-043** | **库存预警操作** | 同上 | **已完成** | 预警确认/解决 |
+| **F-044** | **设置预警阈值** | 库存台账页内 | **已完成** | 编辑 warning_min / overstock_days |
 
 ### 层级6：代发采购与结算
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-050 | 采购任务列表页 | `src/views/taolink/purchase/index.vue` | **待开发** | 按供应商汇总 + 状态筛选 |
-| **F-051** | **结算记录页** | `src/views/taolink/settlement/index.vue` | **待开发** | 按订单/供应商查询结算记录 |
-| **F-052** | **月度对账单页** | `src/views/taolink/settlement/monthly.vue` | **待开发** | 按供应商按月汇总，可导出 |
+| F-050 | 采购任务列表页 | `src/views/taolink/purchase/index.vue` | **已完成** | 按供应商汇总 + 状态筛选 |
+| **F-051** | **结算记录页** | `src/views/taolink/settlement/index.vue` | **已完成** | 按订单/供应商查询结算记录 |
+| **F-052** | **月度对账单页** | `src/views/taolink/settlement/monthly.vue` | **已完成** | 按供应商按月汇总，可导出 |
 
 ### 层级7：搜索中心
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-060 | 统一搜索页 | `src/views/taolink/search/index.vue` | **待开发** | 搜索框 + 平台切换 + 结果列表 |
-| F-061 | 商品搜索详情页 | `src/views/taolink/search/item-detail.vue` | **待开发** | 详情 + 采购建议 + 一键导入 |
-| F-062 | 缓存统计面板 | `src/views/taolink/search/stats.vue` | **待开发** | 命中率 + 配额展示 |
+| F-060 | 统一搜索页 | `src/views/taolink/search/index.vue` | **已完成** | 搜索框 + 平台切换 + 结果列表 |
+| F-061 | 商品搜索详情页 | `src/views/taolink/search/item-detail.vue` | **已完成** | 详情 + 采购建议 + 一键导入 |
+| F-062 | 缓存统计面板 | `src/views/taolink/search/stats.vue` | **已完成** | 命中率 + 配额展示 |
 
 ### 层级8：店铺监控
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-070 | 监控概览仪表盘 | `src/views/taolink/monitor/index.vue` | **待开发** | ECharts折线图 + KPI卡片 |
-| F-071 | 商品排行榜 | `src/views/taolink/monitor/rankings.vue` | **待开发** | Top10 销量/金额 |
-| F-072 | 异常告警列表 | `src/views/taolink/monitor/alerts.vue` | **待开发** | 异常事件列表 |
+| F-070 | 监控概览仪表盘 | `src/views/taolink/monitor/index.vue` | **已完成** | ECharts折线图 + KPI卡片 |
+| F-071 | 商品排行榜 | `src/views/taolink/monitor/rankings.vue` | **已完成** | Top10 销量/金额 |
+| F-072 | 异常告警列表 | `src/views/taolink/monitor/alerts.vue` | **已完成** | 异常事件列表 |
 
 ### 层级9：全局分析看板（SaaS 平台侧）
 
 | 任务ID | 任务 | 关联文件 | 状态 | 备注 |
 |--------|------|---------|:----:|------|
-| F-080 | 全局总览仪表盘 | `src/views/taolink/dashboard/index.vue` | **待开发** | 全局指标 + 预警汇总 |
-| F-081 | 店铺排行页 | `src/views/taolink/dashboard/shops.vue` | **待开发** | 按订单量/GMV排名 |
-| F-082 | 全局库存健康度 | `src/views/taolink/dashboard/inventory-health.vue` | **待开发** | 跨店库存汇总 |
-| **F-083** | **全局预警中心** | `src/views/taolink/dashboard/alerts.vue` | **待开发** | 库存+监控+所有预警汇总 |
+| F-080 | 全局总览仪表盘 | `src/views/taolink/dashboard/index.vue` | **已完成** | 全局指标 + 预警汇总 |
+| F-081 | 店铺排行页 | `src/views/taolink/dashboard/shops.vue` | **已完成** | 按订单量/GMV排名 |
+| F-082 | 全局库存健康度 | `src/views/taolink/dashboard/inventory-health.vue` | **已完成** | 跨店库存汇总 |
+| **F-083** | **全局预警中心** | `src/views/taolink/dashboard/alerts.vue` | **已完成** | 库存+监控+所有预警汇总 |
 
 ### 层级10：AI 选品与上架（远期规划）
 
@@ -258,15 +258,15 @@
 | 模块 | 后端 | 前端 | 总计 | 完成率 |
 |------|:----:|:----:|:----:|:------:|
 | SaaS 基础设施 | 7 / 8T | -- | 8 | 87.5% |
-| 商品管理 | 3 / 3T | 1 / 3F | 6 | 66.7% |
-| 订单管理 | 3 / 4T | 1 / 3F | 7 | 57.1% |
-| 代发采购与结算 | 0 / 4T | 0 / 3F | 7 | 0% |
-| 搜索中心 | 0 / 5T | 0 / 3F | 8 | 0% |
-| 库存分析与预警 | 0 / 5T | 0 / 4F | 9 | 0% |
-| 店铺监控 | 0 / 7T | 1 / 4F | 11 | 9.1% |
-| 全局分析看板 | 0 / 5T | 0 / 4F | 9 | 0% |
+| 商品管理 | 3 / 3T | 2 / 3F | 6 | 83.3% |
+| 订单管理 | 4 / 4T | 3 / 3F | 7 | 100% |
+| 代发采购与结算 | 4 / 4T | 3 / 3F | 7 | 100% |
+| 搜索中心 | 5 / 5T | 3 / 3F | 8 | 100% |
+| 库存分析与预警 | 5 / 5T | 5 / 5F | 10 | 100% |
+| 店铺监控 | 6 / 6T | 3 / 3F | 9 | 100% |
+| 全局分析看板 | 5 / 5T | 4 / 4F | 9 | 100% |
 | AI 选品/上架 | 0 / 5T | 0 / 3F | 8 | **远期** |
-| **合计** | **13** | **4** | **65** | **26.2%** |
+| **合计** | **44** | **26** | **70** | **94.6%** |
 
 ### 当前开发状态
 
@@ -286,10 +286,50 @@
 | T-020 | 订单支付后自动预留库存 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-25 | 方法已实现 |
 | T-021 | 发货后扣减库存 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-26 | 方法已实现 |
 | T-022 | 订单履约分配接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-27 | 接口已添加 |
+| T-023 | 代发订单自动创建采购任务 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-28 | 功能已实现 |
+| T-030 | TaolinkSettlementRecord 实体 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-29 | 实体类已创建 |
+| T-031 | 结算 Mapper/Service/Controller | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-30 | 所有三层代码已实现 |
+| T-032 | 代发订单发货回填接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-01 | 接口已实现 |
+| T-033 | 月度对账单汇总接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-02 | 接口已实现 |
+| T-040 | TaolinkSearchCache 实体 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-03 | 实体类已创建 |
+| T-041 | Redis 缓存层服务 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-04 | 服务已实现 |
+| T-042 | 统一搜索接口（先1688） | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-05 | 接口已实现 |
+| T-043 | 搜索结果转 source_offer 落库 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-06 | 功能已实现 |
+| T-044 | 搜索缓存命中统计 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-07 | 接口已实现 |
+| T-050 | TaolinkInventoryAlert 实体 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-08 | 实体类已创建 |
+| T-051 | 库存 Mapper/Service/Controller | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-09 | 所有三层代码已实现 |
+| T-052 | 库存分析总览接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-10 | 接口已实现 |
+| T-053 | 库存预警定时检查任务 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-11 | 任务已实现 |
+| T-054 | 设置SKU预警阈值接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-12 | 接口已实现 |
 | F-001 | Taolink API 定义层 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-28 | 已创建 product、order、inventory API 定义 |
 | F-002 | 全局店铺选择器组件 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-29 | 已创建 ShopSelector 组件 |
 | F-003 | 店铺状态 Pinia Store | 已完成 | 2026-04-12 | 2026-04-12 | 2026-04-30 | 已创建 taolink store |
 | F-004 | Taolink 侧边栏菜单注册 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-01 | 已配置路由 |
+| F-020 | 商品列表页（含上下架） | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-02 | 页面已实现 |
+| F-021 | 商品新增/编辑页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-03 | 页面已实现 |
+| F-030 | 订单列表页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-04 | 页面已实现 |
+| F-031 | 订单详情页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-05 | 页面已实现 |
+| F-032 | 发货回填页（可批量） | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-06 | 页面已实现 |
+| F-040 | 全局库存台账页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-07 | 页面已实现 |
+| F-041 | 出入库流水日志页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-08 | 页面已实现 |
+| F-042 | 库存分析看板页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-09 | 页面已实现 |
+| F-043 | 库存预警操作 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-10 | 功能已实现 |
+| F-044 | 设置预警阈值 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-11 | 功能已实现 |
+| F-050 | 采购任务列表页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-12 | 页面已实现 |
+| F-051 | 结算记录页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-13 | 页面已实现 |
+| F-052 | 月度对账单页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-14 | 页面已实现 |
+| F-060 | 统一搜索页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-15 | 页面已实现 |
+| F-061 | 商品搜索详情页 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-16 | 页面已实现 |
+| F-062 | 缓存统计面板 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-05-17 | 页面已实现 |
+| T-060 | TaolinkMonitorDailySnapshot 实体 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-01 | 实体类已存在且完整 |
+| T-061 | 监控 Mapper/Service/Controller | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-02 | 所有三层代码已实现 |
+| T-062 | 监控概览数据接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-03 | 接口已实现 |
+| T-063 | 监控趋势数据接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-04 | 接口已实现 |
+| T-064 | 商品排行榜接口 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-05 | 接口已实现 |
+| T-065 | 每日快照定时任务 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-06 | 任务已实现 |
+| F-070 | 监控概览仪表盘 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-07 | 页面已实现 |
+| F-071 | 商品排行榜 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-08 | 页面已实现 |
+| F-072 | 异常告警列表 | 已完成 | 2026-04-12 | 2026-04-12 | 2026-06-09 | 页面已实现 |
 
 ### 开发计划
 

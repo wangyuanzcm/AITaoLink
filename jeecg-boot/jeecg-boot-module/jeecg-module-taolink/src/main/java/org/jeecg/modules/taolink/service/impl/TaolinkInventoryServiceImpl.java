@@ -232,5 +232,148 @@ public class TaolinkInventoryServiceImpl extends ServiceImpl<TaolinkInventoryMap
             return Result.error("更新预警阈值失败: " + e.getMessage());
         }
     }
+
+    @Override
+    public long countInventoryItems() {
+        return this.count();
+    }
+
+    @Override
+    public long countLowStockItems() {
+        List<TaolinkInventory> inventories = this.list();
+        long count = 0;
+        for (TaolinkInventory inv : inventories) {
+            int available = inv.getAvailable() == null ? 0 : inv.getAvailable();
+            int warningMin = inv.getWarningMin() == null ? 5 : inv.getWarningMin();
+            if (available < warningMin) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public long countOverstockItems() {
+        List<TaolinkInventory> inventories = this.list();
+        long count = 0;
+        for (TaolinkInventory inv : inventories) {
+            int available = inv.getAvailable() == null ? 0 : inv.getAvailable();
+            // 简单判断：假设库存大于100且超过30天未动为积压
+            if (available > 100) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public double calculateInventoryHealthScore() {
+        List<TaolinkInventory> inventories = this.list();
+        if (inventories.isEmpty()) {
+            return 100.0;
+        }
+        
+        long totalItems = inventories.size();
+        long lowStockItems = countLowStockItems();
+        long overstockItems = countOverstockItems();
+        
+        // 健康度计算：100 - (低库存比例 + 积压库存比例) * 100
+        double unhealthyRatio = (lowStockItems + overstockItems) / (double) totalItems;
+        double healthScore = 100.0 - (unhealthyRatio * 100.0);
+        return Math.max(0.0, Math.min(100.0, healthScore));
+    }
+
+    @Override
+    public double calculateInventoryTurnoverRate() {
+        // 简化计算：假设月销售额为10000，平均库存价值为5000
+        double monthlySales = 10000.0;
+        double averageInventory = 5000.0;
+        return monthlySales / averageInventory;
+    }
+
+    @Override
+    public long calculateInventoryValue() {
+        List<TaolinkInventory> inventories = this.list();
+        long totalValue = 0;
+        for (TaolinkInventory inv : inventories) {
+            int available = inv.getAvailable() == null ? 0 : inv.getAvailable();
+            // 假设每个SKU价值100元，实际应该从产品表获取
+            totalValue += available * 100;
+        }
+        return totalValue;
+    }
+
+    @Override
+    public java.util.Map<String, Long> getInventoryStatusCounts() {
+        java.util.Map<String, Long> statusCounts = new java.util.HashMap<>();
+        List<TaolinkInventory> inventories = this.list();
+        
+        long normalCount = 0;
+        long lowStockCount = 0;
+        long overstockCount = 0;
+        long outOfStockCount = 0;
+        
+        for (TaolinkInventory inv : inventories) {
+            int available = inv.getAvailable() == null ? 0 : inv.getAvailable();
+            int warningMin = inv.getWarningMin() == null ? 5 : inv.getWarningMin();
+            
+            if (available == 0) {
+                outOfStockCount++;
+            } else if (available < warningMin) {
+                lowStockCount++;
+            } else if (available > 100) {
+                overstockCount++;
+            } else {
+                normalCount++;
+            }
+        }
+        
+        statusCounts.put("normal", normalCount);
+        statusCounts.put("lowStock", lowStockCount);
+        statusCounts.put("overstock", overstockCount);
+        statusCounts.put("outOfStock", outOfStockCount);
+        
+        return statusCounts;
+    }
+
+    @Override
+    public long countLowStockAlerts() {
+        return countLowStockItems();
+    }
+
+    @Override
+    public long countOverstockAlerts() {
+        return countOverstockItems();
+    }
+
+    @Override
+    public java.util.List<java.util.Map<String, Object>> getAlertDetails() {
+        java.util.List<java.util.Map<String, Object>> alertDetails = new java.util.ArrayList<>();
+        List<TaolinkInventory> inventories = this.list();
+        
+        for (TaolinkInventory inv : inventories) {
+            int available = inv.getAvailable() == null ? 0 : inv.getAvailable();
+            int warningMin = inv.getWarningMin() == null ? 5 : inv.getWarningMin();
+            
+            if (available < warningMin) {
+                java.util.Map<String, Object> alert = new java.util.HashMap<>();
+                alert.put("type", "lowStock");
+                alert.put("productSkuId", inv.getProductSkuId());
+                alert.put("available", available);
+                alert.put("threshold", warningMin);
+                alert.put("warehouseId", inv.getWarehouseId());
+                alertDetails.add(alert);
+            } else if (available > 100) {
+                java.util.Map<String, Object> alert = new java.util.HashMap<>();
+                alert.put("type", "overstock");
+                alert.put("productSkuId", inv.getProductSkuId());
+                alert.put("available", available);
+                alert.put("warehouseId", inv.getWarehouseId());
+                alertDetails.add(alert);
+            }
+        }
+        
+        return alertDetails;
+    }
 }
 

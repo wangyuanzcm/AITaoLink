@@ -54,19 +54,20 @@
               <a-list-item key="item.num_iid">
                 <a-list-item-meta
                   :avatar="item.pic_url ? { src: item.pic_url } : null"
-                  :title="() => (
+                >
+                  <template #title>
                     <a href="javascript:;" @click="handleViewDetail(item)">
                       {{ item.title }}
                     </a>
-                  )"
-                  :description="() => (
+                  </template>
+                  <template #description>
                     <div class="item-description">
                       <div class="price">价格：¥{{ item.price }}</div>
                       <div class="seller">卖家：{{ item.seller_nick }}</div>
                       <div class="location" v-if="item.location">发货地：{{ item.location }}</div>
                     </div>
-                  )"
-                />
+                  </template>
+                </a-list-item-meta>
                 <div class="item-actions">
                   <a-button type="primary" @click="handleImportItem(item)">
                     导入

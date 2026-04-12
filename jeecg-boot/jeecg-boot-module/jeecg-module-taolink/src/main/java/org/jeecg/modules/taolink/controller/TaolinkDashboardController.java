@@ -1,77 +1,196 @@
 package org.jeecg.modules.taolink.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.jeecg.common.api.vo.Result;
-import org.springframework.web.bind.annotation.*;
+import org.jeecg.modules.taolink.service.ITaolinkOrderService;
+import org.jeecg.modules.taolink.service.ITaolinkProductService;
+import org.jeecg.modules.taolink.service.ITaolinkInventoryService;
+import org.jeecg.modules.taolink.service.ITaolinkShopService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * 全局分析看板控制器
+ * 提供跨店铺的全局数据统计和分析接口
+ */
 @Slf4j
-@Tag(name = "TaoLink-全局看板")
+@Tag(name = "TaoLink-全局分析看板")
 @RestController
 @RequestMapping("/taolink/dashboard")
 public class TaolinkDashboardController {
 
+    @Autowired
+    private ITaolinkShopService shopService;
+
+    @Autowired
+    private ITaolinkProductService productService;
+
+    @Autowired
+    private ITaolinkOrderService orderService;
+
+    @Autowired
+    private ITaolinkInventoryService inventoryService;
+
+    /**
+     * 全局总览指标接口
+     * 获取所有店铺的汇总数据
+     */
     @Operation(summary = "全局总览指标")
     @GetMapping(value = "/global/overview")
-    public Result<Map<String, Object>> globalOverview(@RequestParam(defaultValue = "7") Integer days) {
-        // 返回全局指标汇总：店铺数、商品数、订单数、库存健康度、预警数
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("shopCount", 0);       // 总店铺数
-        data.put("productCount", 0);    // 总商品数
-        data.put("listedProductCount", 0); // 在售商品数
-        data.put("todayOrderCount", 0);    // 今日订单数
-        data.put("todayGMV", 0);           // 今日GMV(分)
-        data.put("outOfStockSkuCount", 0); // 缺货SKU数
-        data.put("lowStockAlertCount", 0); // 低库存预警数
-        data.put("overstockAlertCount", 0);// 积压预警数
-        data.put("pendingSettlementCount", 0); // 待结算数
-        // 注：后续接入实际查询逻辑
-        return Result.OK(data);
+    public Result<Map<String, Object>> getGlobalOverview() {
+        try {
+            Map<String, Object> overview = new HashMap<>();
+            
+            // 统计店铺数量
+            long shopCount = shopService.count();
+            overview.put("shopCount", shopCount);
+            
+            // 统计商品总数
+            long productCount = productService.count();
+            overview.put("productCount", productCount);
+            
+            // 统计在售商品数
+            long listedProductCount = productService.countListedProducts();
+            overview.put("listedProductCount", listedProductCount);
+            
+            // 统计当日订单数
+            int todayOrderCount = orderService.countTodayOrders();
+            overview.put("todayOrderCount", todayOrderCount);
+            
+            // 统计当日GMV
+            int todayGmv = orderService.calculateTodayGmv();
+            overview.put("todayGmv", todayGmv);
+            
+            // 统计库存SKU数
+            long inventorySkuCount = inventoryService.countInventoryItems();
+            overview.put("inventorySkuCount", inventorySkuCount);
+            
+            // 统计低库存SKU数
+            long lowStockSkuCount = inventoryService.countLowStockItems();
+            overview.put("lowStockSkuCount", lowStockSkuCount);
+            
+            // 统计积压库存SKU数
+            long overstockSkuCount = inventoryService.countOverstockItems();
+            overview.put("overstockSkuCount", overstockSkuCount);
+            
+            return Result.OK(overview);
+        } catch (Exception e) {
+            log.error("获取全局总览指标失败", e);
+            return Result.error("获取全局总览指标失败");
+        }
     }
 
+    /**
+     * 店铺排行接口
+     * 按订单量和GMV进行店铺排名
+     */
     @Operation(summary = "店铺排行")
     @GetMapping(value = "/global/shop-ranking")
-    public Result<List<Map<String, Object>>> shopRanking(
-            @RequestParam(defaultValue = "7") Integer days,
-            @RequestParam(defaultValue = "orderCount") String orderBy,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        // 按订单量/GMV排名的店铺Top列表
-        // 注：后续接入实际查询逻辑
-        return Result.OK(Collections.emptyList());
+    public Result<List<Map<String, Object>>> getShopRanking() {
+        try {
+            List<Map<String, Object>> rankingList = shopService.getShopRanking();
+            return Result.OK(rankingList);
+        } catch (Exception e) {
+            log.error("获取店铺排行失败", e);
+            return Result.error("获取店铺排行失败");
+        }
     }
 
+    /**
+     * 全局库存健康度接口
+     * 提供库存健康状态的统计数据
+     */
     @Operation(summary = "全局库存健康度")
     @GetMapping(value = "/global/inventory-health")
-    public Result<Map<String, Object>> inventoryHealth() {
-        // 返回全局库存健康度：SKU分布、仓库分布、预警汇总
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("totalSkuCount", 0);
-        data.put("inStockSkuCount", 0);
-        data.put("outOfStockSkuCount", 0);
-        // 注：后续接入实际查询逻辑
-        return Result.OK(data);
+    public Result<Map<String, Object>> getInventoryHealth() {
+        try {
+            Map<String, Object> healthData = new HashMap<>();
+            
+            // 库存健康度计算
+            double healthScore = inventoryService.calculateInventoryHealthScore();
+            healthData.put("healthScore", healthScore);
+            
+            // 库存周转率
+            double turnoverRate = inventoryService.calculateInventoryTurnoverRate();
+            healthData.put("turnoverRate", turnoverRate);
+            
+            // 库存价值
+            long inventoryValue = inventoryService.calculateInventoryValue();
+            healthData.put("inventoryValue", inventoryValue);
+            
+            // 各类库存状态统计
+            Map<String, Long> statusCounts = inventoryService.getInventoryStatusCounts();
+            healthData.put("statusCounts", statusCounts);
+            
+            return Result.OK(healthData);
+        } catch (Exception e) {
+            log.error("获取库存健康度失败", e);
+            return Result.error("获取库存健康度失败");
+        }
     }
 
+    /**
+     * 全局预警汇总接口
+     * 汇总所有店铺的预警信息
+     */
     @Operation(summary = "全局预警汇总")
     @GetMapping(value = "/global/alerts")
-    public Result<Map<String, Object>> globalAlerts() {
-        // 返回所有类型的预警汇总
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("lowStockAlerts", Collections.emptyList());
-        data.put("overstockAlerts", Collections.emptyList());
-        data.put("monitorAlerts", Collections.emptyList());
-        // 注：后续接入实际查询逻辑
-        return Result.OK(data);
+    public Result<Map<String, Object>> getGlobalAlerts() {
+        try {
+            Map<String, Object> alertsData = new HashMap<>();
+            
+            // 低库存预警
+            long lowStockAlerts = inventoryService.countLowStockAlerts();
+            alertsData.put("lowStockAlerts", lowStockAlerts);
+            
+            // 积压库存预警
+            long overstockAlerts = inventoryService.countOverstockAlerts();
+            alertsData.put("overstockAlerts", overstockAlerts);
+            
+            // 订单异常预警
+            long orderAlerts = orderService.countOrderAlerts();
+            alertsData.put("orderAlerts", orderAlerts);
+            
+            // 退款异常预警
+            long refundAlerts = orderService.countRefundAlerts();
+            alertsData.put("refundAlerts", refundAlerts);
+            
+            // 预警详情列表
+            List<Map<String, Object>> alertDetails = inventoryService.getAlertDetails();
+            alertsData.put("alertDetails", alertDetails);
+            
+            return Result.OK(alertsData);
+        } catch (Exception e) {
+            log.error("获取全局预警汇总失败", e);
+            return Result.error("获取全局预警汇总失败");
+        }
     }
 
-    @Operation(summary = "全局趋势数据（近N天订单/GMV趋势）")
+    /**
+     * 全局趋势接口
+     * 获取指定天数的趋势数据
+     */
+    @Operation(summary = "全局趋势")
     @GetMapping(value = "/global/trend")
-    public Result<List<Map<String, Object>>> globalTrend(@RequestParam(defaultValue = "30") Integer days) {
-        // 返回近N天的每日订单趋势和GMV趋势
-        // 注：后续接入实际查询逻辑
-        return Result.OK(Collections.emptyList());
+    public Result<List<Map<String, Object>>> getGlobalTrend(
+            @Parameter(description = "统计天数", example = "30")
+            @RequestParam(name = "days", defaultValue = "30") Integer days) {
+        try {
+            List<Map<String, Object>> trendData = orderService.getGlobalTrend(days);
+            return Result.OK(trendData);
+        } catch (Exception e) {
+            log.error("获取全局趋势失败", e);
+            return Result.error("获取全局趋势失败");
+        }
     }
 }
