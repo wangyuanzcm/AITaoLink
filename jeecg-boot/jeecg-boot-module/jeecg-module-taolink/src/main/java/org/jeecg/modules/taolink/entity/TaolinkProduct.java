@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "内部商品SPU")
@@ -43,5 +42,62 @@ public class TaolinkProduct extends JeecgEntity implements Serializable {
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date delistedAt;
+
+    // Getters and Setters
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getListingStatus() {
+        return listingStatus;
+    }
+
+    public void setListingStatus(String listingStatus) {
+        this.listingStatus = listingStatus;
+    }
+
+    public Date getListedAt() {
+        return listedAt;
+    }
+
+    public void setListedAt(Date listedAt) {
+        this.listedAt = listedAt;
+    }
+
+    public Date getDelistedAt() {
+        return delistedAt;
+    }
+
+    public void setDelistedAt(Date delistedAt) {
+        this.delistedAt = delistedAt;
+    }
 }
 

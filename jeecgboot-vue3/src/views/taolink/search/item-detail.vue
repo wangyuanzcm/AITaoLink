@@ -44,6 +44,10 @@
                 <a-icon type="link" />
                 查看原始链接
               </a-button>
+              <a-button style="margin-left: 8px" @click="handleRefresh">
+                <a-icon type="reload" />
+                刷新商品信息
+              </a-button>
             </div>
           </a-col>
         </a-row>
@@ -96,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { searchApi } from '@/api/taolink/search';
 import { message } from 'ant-design-vue';
 import { useRoute } from 'vue-router';
@@ -116,21 +120,14 @@ const numIid = ref('');
 const loadItemDetail = async () => {
   loading.value = true;
   try {
-    // 这里应该调用商品详情接口，暂时使用模拟数据
+    // 这里应该调用商品详情接口
     // 实际项目中需要根据平台和商品ID调用相应的接口
-    itemDetail.value = {
-      title: '测试商品 - 高品质办公椅',
-      price: '199.00',
-      seller_nick: '测试卖家',
-      location: '浙江杭州',
-      min_num: 5,
-      pics: [
-        'https://img.alicdn.com/imgextra/i3/O1CN0123456789ABCDEFG_!!6000000001234-0-tps-800-800.jpg',
-        'https://img.alicdn.com/imgextra/i4/O1CN0123456789ABCDEFG_!!6000000001234-0-tps-800-800.jpg',
-      ],
-      desc: '这是一个高品质的办公椅，舒适耐用，适合长时间办公使用。',
-      detail_url: 'https://detail.1688.com/offer/1234567890.html',
-    };
+    // 先从缓存中获取，缓存不存在时再调用接口
+    const res = await searchApi.getItemDetail({
+      platform: platform.value,
+      num_iid: numIid.value
+    });
+    itemDetail.value = res;
   } catch (error) {
     message.error('加载商品详情失败');
   } finally {
@@ -144,14 +141,10 @@ const handleImport = async () => {
 
   loading.value = true;
   try {
-    const res = await searchApi.importToSourceOffer({
+    await searchApi.importToSourceOffer({
       items: [itemDetail.value],
     });
-    if (res.success) {
-      message.success('导入成功');
-    } else {
-      message.error('导入失败：' + res.message);
-    }
+    message.success('导入成功');
   } catch (error) {
     message.error('导入失败');
   } finally {
@@ -175,6 +168,22 @@ onMounted(() => {
     loadItemDetail();
   }
 });
+
+// 监听路由参数变化
+watch(() => [route.params.id, route.query.platform], ([newId, newPlatform]) => {
+  if (newId) {
+    platform.value = newPlatform as string || '1688';
+    numIid.value = newId as string;
+    loadItemDetail();
+  }
+}, { deep: true });
+
+// 刷新商品信息
+const handleRefresh = async () => {
+  if (numIid.value) {
+    await loadItemDetail();
+  }
+};
 </script>
 
 <style scoped>

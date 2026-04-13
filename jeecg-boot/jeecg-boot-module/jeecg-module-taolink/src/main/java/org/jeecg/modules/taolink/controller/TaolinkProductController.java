@@ -105,9 +105,17 @@ public class TaolinkProductController extends JeecgController<TaolinkProduct, IT
         return Result.OK("下架成功！");
     }
 
-    @Data
     public static class ListDelistRequest {
         private String id;
+
+        // Getters and Setters
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
 
         public void check() {
             if (id == null || id.isEmpty()) {

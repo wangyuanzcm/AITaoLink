@@ -22,6 +22,46 @@ const taolink: AppRouteModule = {
         title: '商铺管理',
         icon: 'icon-shop',
       },
+      children: [
+        {
+          path: 'detail/:id',
+          name: 'TaoLinkShopDetail',
+          component: () => import('/@/views/taolink/shop/detail.vue'),
+          meta: {
+            title: '店铺详情',
+            hideMenu: true,
+          },
+        },
+      ],
+    },
+    {
+      path: 'product',
+      name: 'TaoLinkProduct',
+      component: () => import('/@/views/taolink/product/index.vue'),
+      meta: {
+        title: '商品管理',
+        icon: 'icon-product',
+      },
+      children: [
+        {
+          path: 'form/:id?',
+          name: 'TaoLinkProductForm',
+          component: () => import('/@/views/taolink/product/form.vue'),
+          meta: {
+            title: '商品编辑',
+            hideMenu: true,
+          },
+        },
+        {
+          path: 'detail/:id',
+          name: 'TaoLinkProductDetail',
+          component: () => import('/@/views/taolink/product/detail.vue'),
+          meta: {
+            title: '商品详情',
+            hideMenu: true,
+          },
+        },
+      ],
     },
     {
       path: 'order-shipment',
@@ -76,6 +116,17 @@ const taolink: AppRouteModule = {
         title: '搜索中心',
         icon: 'icon-search',
       },
+      children: [
+        {
+          path: 'item-detail/:id',
+          name: 'TaoLinkSearchItemDetail',
+          component: () => import('/@/views/taolink/search/item-detail.vue'),
+          meta: {
+            title: '商品详情',
+            hideMenu: true,
+          },
+        },
+      ],
     },
     {
       path: 'monitor',

@@ -63,7 +63,7 @@
                 <span>排名</span>
               </template>
             </template>
-            <template #bodyCell="{ record, index }">
+            <template #bodyCell="{ record }">
               <template v-if="record.rank <= 3">
                 <a-tag :color="getRankColor(record.rank)">
                   {{ record.rank }}
@@ -81,10 +81,7 @@
       <div class="ranking-chart">
         <a-card title="店铺GMV排行前10">
           <div class="chart-container">
-            <v-chart
-              :option="chartOption"
-              style="width: 100%; height: 400px"
-            />
+            <div ref="chartRef" style="width: 100%; height: 400px"></div>
           </div>
         </a-card>
       </div>
@@ -93,19 +90,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { VChart } from '@visactor/vue3-vchart';
-import { BarChart, Title, Tooltip, Legend, Axis } from '@visactor/vchart';
+import type { EChartsOption } from 'echarts';
+import type { Ref } from 'vue';
+import { ref, computed, onMounted, h, watchEffect } from 'vue';
+import { Button, Tag } from 'ant-design-vue';
+import { useECharts } from '/@/hooks/web/useECharts';
 
-// 注册 VChart 组件
-VChart.use([BarChart, Title, Tooltip, Legend, Axis]);
+defineOptions({ name: 'TaolinkDashboardShops' });
 
 // 数据状态
 const loading = ref(false);
-const shopRanking = ref([]);
-const sortBy = ref('gmv'); // 默认按GMV排序
-const sortOrder = ref('desc'); // 默认降序
-const statusFilter = ref(''); // 状态筛选
+
+interface ShopRankingItem {
+  shopId: string;
+  shopName: string;
+  orderCount: number;
+  gmv: number;
+  status: string;
+}
+
+const shopRanking = ref<ShopRankingItem[]>([]);
+const sortBy = ref<'gmv' | 'orderCount'>('gmv');
+const sortOrder = ref<'desc' | 'asc'>('desc');
+const statusFilter = ref('');
+
+const chartRef = ref<HTMLDivElement | null>(null);
+const { setOptions } = useECharts(chartRef as Ref<HTMLDivElement>);
 
 // 表格列配置
 const rankingColumns = [
@@ -132,20 +142,20 @@ const rankingColumns = [
     dataIndex: 'gmv',
     key: 'gmv',
     width: 150,
-    customRender: (text) => `¥${(text / 100).toFixed(2)}`
+    customRender: ({ text }) => `¥${(text / 100).toFixed(2)}`,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     width: 100,
-    customRender: (text) => {
+    customRender: ({ text }) => {
       const statusMap = {
         'active': { text: '正常', color: 'green' },
         'inactive': { text: '禁用', color: 'red' }
       };
       const status = statusMap[text] || { text: text, color: 'default' };
-      return <a-tag :color="status.color">{status.text}</a-tag>;
+      return h(Tag, { color: status.color }, () => status.text);
     }
   },
   {
@@ -153,12 +163,15 @@ const rankingColumns = [
     key: 'action',
     width: 120,
     fixed: 'right',
-    customRender: (_, record) => (
-      <div>
-        <a-button type="link" size="small">详情</a-button>
-        <a-button type="link" size="small">查看店铺</a-button>
-      </div>
-    )
+    customRender: () =>
+      h(
+        'div',
+        { style: { display: 'flex', gap: '8px' } },
+        [
+          h(Button, { type: 'link', size: 'small' }, () => '详情'),
+          h(Button, { type: 'link', size: 'small' }, () => '查看店铺'),
+        ],
+      ),
   }
 ];
 
@@ -190,7 +203,7 @@ const filteredRanking = computed(() => {
 });
 
 // 图表配置
-const chartOption = computed(() => {
+const chartOption = computed<EChartsOption>(() => {
   const top10Shops = filteredRanking.value.slice(0, 10);
   const shopNames = top10Shops.map(item => item.shopName);
   const gmvValues = top10Shops.map(item => item.gmv / 100); // 转换为元
@@ -204,7 +217,8 @@ const chartOption = computed(() => {
       trigger: 'axis',
       formatter: function(params) {
         const data = params[0];
-        return `${data.name}<br/>GMV: ¥${data.value.toFixed(2)}`;
+        const val = Number(data?.value ?? 0);
+        return `${data.name}<br/>GMV: ¥${val.toFixed(2)}`;
       }
     },
     grid: {
@@ -230,23 +244,13 @@ const chartOption = computed(() => {
         name: 'GMV',
         type: 'bar',
         data: gmvValues,
-        itemStyle: {
-          color: new VChart.GradientColor({
-            x0: 0,
-            y0: 0,
-            x1: 0,
-            y1: 1,
-            stops: [
-              { offset: 0, color: '#1890ff' },
-              { offset: 1, color: '#69c0ff' }
-            ]
-          })
-        },
+        itemStyle: { color: '#1890ff' },
         label: {
           show: true,
           position: 'top',
           formatter: function(params) {
-            return `¥${params.value.toFixed(0)}`;
+            const val = Number(params?.value ?? 0);
+            return `¥${val.toFixed(0)}`;
           }
         }
       }
@@ -255,7 +259,7 @@ const chartOption = computed(() => {
 });
 
 // 获取排名颜色
-const getRankColor = (rank) => {
+const getRankColor = (rank: number) => {
   switch (rank) {
     case 1:
       return 'gold';
@@ -269,7 +273,7 @@ const getRankColor = (rank) => {
 };
 
 // 模拟数据
-const mockShopRanking = [
+const mockShopRanking: ShopRankingItem[] = [
   { shopId: '1', shopName: '淘宝旗舰店', orderCount: 1200, gmv: 6000000, status: 'active' },
   { shopId: '2', shopName: '京东专卖店', orderCount: 950, gmv: 4800000, status: 'active' },
   { shopId: '3', shopName: '拼多多店', orderCount: 1500, gmv: 3500000, status: 'active' },
@@ -299,6 +303,11 @@ const initData = async () => {
     loading.value = false;
   }
 };
+
+watchEffect(() => {
+  if (!chartRef.value) return;
+  setOptions(chartOption.value);
+});
 
 // 页面挂载时初始化数据
 onMounted(() => {

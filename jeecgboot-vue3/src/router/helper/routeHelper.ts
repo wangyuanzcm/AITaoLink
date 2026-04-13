@@ -1,7 +1,7 @@
 import type { AppRouteModule, AppRouteRecordRaw } from '/@/router/types';
 import type { Router, RouteRecordNormalized } from 'vue-router';
 
-import { getParentLayout, LAYOUT, EXCEPTION_COMPONENT } from '/@/router/constant';
+import { getParentLayout, LAYOUT } from '/@/router/constant';
 import { cloneDeep, omit } from 'lodash-es';
 import { warn } from '/@/utils/log';
 import { createRouter, createWebHashHistory } from 'vue-router';
@@ -56,8 +56,8 @@ function asyncImportRoute(routes: AppRouteRecordRaw[] | undefined) {
     }
     // @ts-ignore 添加是否缓存路由配置
     item.meta.ignoreKeepAlive = !item?.meta.keepAlive;
-    let token = getToken();
-    let tenantId = getTenantId();
+    const token = getToken();
+    const tenantId = getTenantId();
     // URL支持{{ window.xxx }}占位符变量
     // 代码逻辑说明: [VUEN-1638]菜单tenantId需要动态生成------------
     item.component = (item.component || '').replace(/{{([^}}]+)?}}/g, (s1, s2) => _eval(s2)).replace('${token}', token).replace('${tenantId}', tenantId);
@@ -80,19 +80,13 @@ function asyncImportRoute(routes: AppRouteRecordRaw[] | undefined) {
     if (!item.component && item.meta?.frameSrc) {
       item.component = 'IFRAME';
     }
-    let { component, name } = item;
+    const { component, name } = item;
     const { children } = item;
     if (component) {
       const layoutFound = LayoutMap.get(component.toUpperCase());
       if (layoutFound) {
         item.component = layoutFound;
       } else {
-        if (component.indexOf('dashboard/') > -1) {
-          //当数据标sys_permission中component没有拼接index时前端需要拼接
-          if (component.indexOf('/index') < 0) {
-            component = component + '/index';
-          }
-        }
         item.component = dynamicImport(dynamicViewsModules, component as string);
       }
     } else if (name) {
@@ -104,23 +98,42 @@ function asyncImportRoute(routes: AppRouteRecordRaw[] | undefined) {
 
 function dynamicImport(dynamicViewsModules: Record<string, () => Promise<Recordable>>, component: string) {
   const keys = Object.keys(dynamicViewsModules);
-  const matchKeys = keys.filter((key) => {
-    const k = key.replace('../../views', '');
-    const startFlag = component.startsWith('/');
-    const endFlag = component.endsWith('.vue') || component.endsWith('.tsx');
-    const startIndex = startFlag ? 0 : 1;
-    const lastIndex = endFlag ? k.length : k.lastIndexOf('.');
-    return k.substring(startIndex, lastIndex) === component;
-  });
-  if (matchKeys?.length === 1) {
-    const matchKey = matchKeys[0];
-    return dynamicViewsModules[matchKey];
-  } else if (matchKeys?.length > 1) {
-    warn(
-      'Please do not create `.vue` and `.TSX` files with the same file name in the same hierarchical directory under the views folder. This will cause dynamic introduction failure'
-    );
+
+  const findMatchKey = (comp: string) => {
+    const matchKeys = keys.filter((key) => {
+      const k = key.replace('../../views', '');
+      const startFlag = comp.startsWith('/');
+      const endFlag = comp.endsWith('.vue') || comp.endsWith('.tsx');
+      const startIndex = startFlag ? 0 : 1;
+      const lastIndex = endFlag ? k.length : k.lastIndexOf('.');
+      return k.substring(startIndex, lastIndex) === comp;
+    });
+    if (matchKeys?.length === 1) return matchKeys[0];
+    if (matchKeys?.length > 1) {
+      warn(
+        'Please do not create `.vue` and `.TSX` files with the same file name in the same hierarchical directory under the views folder. This will cause dynamic introduction failure'
+      );
+    }
     return;
+  };
+
+  const directMatchKey = findMatchKey(component);
+  if (directMatchKey) {
+    return dynamicViewsModules[directMatchKey];
   }
+
+  const canTryIndex =
+    !component.endsWith('.vue') &&
+    !component.endsWith('.tsx') &&
+    !component.endsWith('/index') &&
+    component.indexOf('/index') < 0;
+  if (canTryIndex) {
+    const indexMatchKey = findMatchKey(`${component}/index`);
+    if (indexMatchKey) {
+      return dynamicViewsModules[indexMatchKey];
+    }
+  }
+
   // online/aiflow 本地未找到，尝试从懒加载包中按需加载
   if (component.startsWith('/super/online') || component.startsWith('/super/airag')) {
     return () => {
@@ -228,7 +241,7 @@ function isMultipleRoute(routeModule: AppRouteModule) {
  */
 export function addSlashToRouteComponent(routeList: AppRouteRecordRaw[]) {
   routeList.forEach((route) => {
-    let component = route.component as string;
+    const component = route.component as string;
     if (component) {
       const layoutFound = LayoutMap.get(component);
       if (!layoutFound) {
@@ -237,5 +250,5 @@ export function addSlashToRouteComponent(routeList: AppRouteRecordRaw[]) {
     }
     route.children && addSlashToRouteComponent(route.children);
   });
-  return routeList as unknown as T[];
+  return routeList;
 }

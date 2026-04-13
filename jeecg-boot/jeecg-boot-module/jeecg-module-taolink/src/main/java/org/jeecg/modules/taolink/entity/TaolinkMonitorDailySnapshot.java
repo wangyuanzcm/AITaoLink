@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "店铺监控每日快照")
@@ -54,4 +53,93 @@ public class TaolinkMonitorDailySnapshot extends JeecgEntity implements Serializ
 
     @Schema(description = "附加数据（JSON字符串）")
     private String snapshotJson;
+
+    // Getters and Setters
+    public String getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId;
+    }
+
+    public Date getSnapshotDate() {
+        return snapshotDate;
+    }
+
+    public void setSnapshotDate(Date snapshotDate) {
+        this.snapshotDate = snapshotDate;
+    }
+
+    public Integer getProductCount() {
+        return productCount;
+    }
+
+    public void setProductCount(Integer productCount) {
+        this.productCount = productCount;
+    }
+
+    public Integer getListedCount() {
+        return listedCount;
+    }
+
+    public void setListedCount(Integer listedCount) {
+        this.listedCount = listedCount;
+    }
+
+    public Integer getNewListedCount() {
+        return newListedCount;
+    }
+
+    public void setNewListedCount(Integer newListedCount) {
+        this.newListedCount = newListedCount;
+    }
+
+    public Integer getNewDelistedCount() {
+        return newDelistedCount;
+    }
+
+    public void setNewDelistedCount(Integer newDelistedCount) {
+        this.newDelistedCount = newDelistedCount;
+    }
+
+    public Integer getOrderCount() {
+        return orderCount;
+    }
+
+    public void setOrderCount(Integer orderCount) {
+        this.orderCount = orderCount;
+    }
+
+    public Integer getOrderAmount() {
+        return orderAmount;
+    }
+
+    public void setOrderAmount(Integer orderAmount) {
+        this.orderAmount = orderAmount;
+    }
+
+    public Integer getRefundCount() {
+        return refundCount;
+    }
+
+    public void setRefundCount(Integer refundCount) {
+        this.refundCount = refundCount;
+    }
+
+    public Integer getInventoryItemCount() {
+        return inventoryItemCount;
+    }
+
+    public void setInventoryItemCount(Integer inventoryItemCount) {
+        this.inventoryItemCount = inventoryItemCount;
+    }
+
+    public String getSnapshotJson() {
+        return snapshotJson;
+    }
+
+    public void setSnapshotJson(String snapshotJson) {
+        this.snapshotJson = snapshotJson;
+    }
 }

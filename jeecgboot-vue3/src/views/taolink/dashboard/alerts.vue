@@ -44,7 +44,7 @@
             <a-form-item>
               <a-button type="primary" style="width: 100%" @click="refreshAlerts">
                 <template #icon>
-                  <a-icon component="ReloadOutlined" />
+                  <ReloadOutlined />
                 </template>
                 刷新
               </a-button>
@@ -109,46 +109,55 @@
             row-key="id"
             :scroll="{ x: 1000 }"
           >
-            <!-- 预警类型 -->
-            <template #bodyCell="{ record }">
-              <template v-if="record.type === 'lowStock'">
-                <a-tag color="orange">低库存预警</a-tag>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'type'">
+                <template v-if="record.type === 'lowStock'">
+                  <a-tag color="orange">低库存预警</a-tag>
+                </template>
+                <template v-else-if="record.type === 'overstock'">
+                  <a-tag color="red">积压库存预警</a-tag>
+                </template>
+                <template v-else-if="record.type === 'order'">
+                  <a-tag color="blue">订单异常预警</a-tag>
+                </template>
+                <template v-else-if="record.type === 'refund'">
+                  <a-tag color="purple">退款异常预警</a-tag>
+                </template>
+                <template v-else>
+                  <a-tag>{{ record.type }}</a-tag>
+                </template>
               </template>
-              <template v-else-if="record.type === 'overstock'">
-                <a-tag color="red">积压库存预警</a-tag>
+              <template v-else-if="column.key === 'status'">
+                <template v-if="record.status === 'pending'">
+                  <a-tag color="warning">待处理</a-tag>
+                </template>
+                <template v-else-if="record.status === 'processing'">
+                  <a-tag color="blue">处理中</a-tag>
+                </template>
+                <template v-else-if="record.status === 'resolved'">
+                  <a-tag color="green">已解决</a-tag>
+                </template>
+                <template v-else>
+                  <a-tag>{{ record.status }}</a-tag>
+                </template>
               </template>
-              <template v-else-if="record.type === 'order'">
-                <a-tag color="blue">订单异常预警</a-tag>
+              <template v-else-if="column.key === 'action'">
+                <div>
+                  <a-button type="link" size="small" @click="viewAlert(record)">查看</a-button>
+                  <a-button
+                    v-if="record.status === 'pending'"
+                    type="link"
+                    size="small"
+                    @click="processAlert(record)"
+                  >处理</a-button>
+                  <a-button
+                    v-if="record.status === 'processing'"
+                    type="link"
+                    size="small"
+                    @click="resolveAlert(record)"
+                  >解决</a-button>
+                </div>
               </template>
-              <template v-else-if="record.type === 'refund'">
-                <a-tag color="purple">退款异常预警</a-tag>
-              </template>
-              <template v-else>
-                <a-tag>{{ record.type }}</a-tag>
-              </template>
-            </template>
-            <!-- 预警状态 -->
-            <template #bodyCell="{ record }">
-              <template v-if="record.status === 'pending'">
-                <a-tag color="warning">待处理</a-tag>
-              </template>
-              <template v-else-if="record.status === 'processing'">
-                <a-tag color="blue">处理中</a-tag>
-              </template>
-              <template v-else-if="record.status === 'resolved'">
-                <a-tag color="green">已解决</a-tag>
-              </template>
-              <template v-else>
-                <a-tag>{{ record.status }}</a-tag>
-              </template>
-            </template>
-            <!-- 操作 -->
-            <template #bodyCell="{ record }">
-              <div>
-                <a-button type="link" size="small" @click="viewAlert(record)">查看</a-button>
-                <a-button type="link" size="small" @click="processAlert(record)" v-if="record.status === 'pending'">处理</a-button>
-                <a-button type="link" size="small" @click="resolveAlert(record)" v-if="record.status === 'processing'">解决</a-button>
-              </div>
             </template>
           </a-table>
         </a-card>
@@ -158,10 +167,7 @@
       <div class="alerts-distribution">
         <a-card title="预警类型分布">
           <div class="chart-container">
-            <v-chart
-              :option="alertTypeChartOption"
-              style="width: 100%; height: 300px"
-            />
+            <div ref="alertTypeChartRef" style="width: 100%; height: 300px"></div>
           </div>
         </a-card>
       </div>
@@ -170,17 +176,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { VChart } from '@visactor/vue3-vchart';
-import { PieChart, BarChart, Title, Tooltip, Legend, Axis } from '@visactor/vchart';
+import type { EChartsOption } from 'echarts';
+import type { Ref } from 'vue';
+import { ref, computed, onMounted, watchEffect } from 'vue';
 import { ReloadOutlined } from '@ant-design/icons-vue';
+import { useECharts } from '/@/hooks/web/useECharts';
 
-// 注册 VChart 组件
-VChart.use([PieChart, BarChart, Title, Tooltip, Legend, Axis]);
+defineOptions({ name: 'TaolinkDashboardAlerts' });
+
+type AlertType = 'lowStock' | 'overstock' | 'order' | 'refund' | string;
+type AlertStatus = 'pending' | 'processing' | 'resolved' | string;
+
+interface AlertItem {
+  id: string;
+  type: AlertType;
+  object: string;
+  description: string;
+  status: AlertStatus;
+  createdAt: string;
+}
 
 // 数据状态
 const loading = ref(false);
-const alerts = ref([]);
+const alerts = ref<AlertItem[]>([]);
 const alertTypeFilter = ref('');
 const alertStatusFilter = ref('');
 const searchKeyword = ref('');
@@ -257,9 +275,12 @@ const pendingAlerts = computed(() => alerts.value.filter(item => item.status ===
 const processingAlerts = computed(() => alerts.value.filter(item => item.status === 'processing').length);
 const resolvedAlerts = computed(() => alerts.value.filter(item => item.status === 'resolved').length);
 
+const alertTypeChartRef = ref<HTMLDivElement | null>(null);
+const { setOptions: setAlertTypeOptions } = useECharts(alertTypeChartRef as Ref<HTMLDivElement>);
+
 // 预警类型分布图表配置
-const alertTypeChartOption = computed(() => {
-  const typeCounts = {
+const alertTypeChartOption = computed<EChartsOption>(() => {
+  const typeCounts: Record<'lowStock' | 'overstock' | 'order' | 'refund', number> = {
     lowStock: 0,
     overstock: 0,
     order: 0,
@@ -267,8 +288,8 @@ const alertTypeChartOption = computed(() => {
   };
   
   alerts.value.forEach(alert => {
-    if (typeCounts.hasOwnProperty(alert.type)) {
-      typeCounts[alert.type]++;
+    if (alert.type in typeCounts) {
+      typeCounts[alert.type as keyof typeof typeCounts] += 1;
     }
   });
   
@@ -310,20 +331,25 @@ const alertTypeChartOption = computed(() => {
   };
 });
 
+watchEffect(() => {
+  if (!alertTypeChartRef.value) return;
+  setAlertTypeOptions(alertTypeChartOption.value);
+});
+
 // 查看预警详情
-const viewAlert = (record) => {
+const viewAlert = (record: AlertItem) => {
   console.log('查看预警详情:', record);
   // 实际项目中这里会打开详情模态框
 };
 
 // 处理预警
-const processAlert = (record) => {
+const processAlert = (record: AlertItem) => {
   console.log('处理预警:', record);
   // 实际项目中这里会更新预警状态为处理中
 };
 
 // 解决预警
-const resolveAlert = (record) => {
+const resolveAlert = (record: AlertItem) => {
   console.log('解决预警:', record);
   // 实际项目中这里会更新预警状态为已解决
 };
@@ -334,7 +360,7 @@ const refreshAlerts = () => {
 };
 
 // 模拟数据
-const mockAlerts = [
+const mockAlerts: AlertItem[] = [
   { id: '1', type: 'lowStock', object: '商品SKU: SKU001', description: '库存不足，当前库存: 2，预警阈值: 5', status: 'pending', createdAt: '2026-04-12 08:30:00' },
   { id: '2', type: 'lowStock', object: '商品SKU: SKU002', description: '库存不足，当前库存: 1，预警阈值: 5', status: 'pending', createdAt: '2026-04-12 09:15:00' },
   { id: '3', type: 'overstock', object: '商品SKU: SKU003', description: '库存积压，当前库存: 150，超过30天未动', status: 'processing', createdAt: '2026-04-12 10:00:00' },

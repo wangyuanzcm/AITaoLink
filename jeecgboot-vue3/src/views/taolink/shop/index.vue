@@ -1,265 +1,294 @@
 <template>
-  <div class="shop-list-container">
-    <a-card title="店铺管理" :bordered="false">
-      <!-- 搜索区域 -->
-      <div class="search-area">
-        <a-form :model="searchForm" layout="inline" @keyup.enter="handleSearch">
-          <a-form-item label="店铺名称">
-            <a-input v-model:value="searchForm.taobaoSellerNick" placeholder="请输入店铺名称" />
-          </a-form-item>
-          <a-form-item label="状态">
-            <a-select v-model:value="searchForm.status" placeholder="请选择状态">
-              <a-select-option value="active">活跃</a-select-option>
-              <a-select-option value="disabled">禁用</a-select-option>
-              <a-select-option value="unbound">已解绑</a-select-option>
-            </a-select>
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary" @click="handleSearch">查询</a-button>
-            <a-button @click="resetForm">重置</a-button>
-          </a-form-item>
-        </a-form>
-      </div>
+  <div>
+    <BasicTable @register="registerTable">
+      <template #tableTitle>
+        <a-button type="primary" preIcon="ant-design:plus-outlined" @click="handleBindShop">绑定新店</a-button>
+      </template>
+      <template #status="{ record }">
+        <a-tag :color="getStatusColor(record.status)">{{ getStatusText(record.status) }}</a-tag>
+      </template>
+      <template #apiStatus="{ record }">
+        <a-tag :color="getApiStatusColor(record.apiExpireAt)">{{ getApiStatusText(record.apiExpireAt) }}</a-tag>
+      </template>
+      <template #bindPlatforms="{ text }">
+        <span>{{ formatBindPlatforms(text) }}</span>
+      </template>
+      <template #action="{ record }">
+        <TableAction :actions="getTableActions(record)" />
+      </template>
+    </BasicTable>
 
-      <!-- 操作区域 -->
-      <div class="action-area">
-        <a-button type="primary" @click="handleAdd">绑定新店</a-button>
-      </div>
-
-      <!-- 店铺列表 -->
-      <a-table
-        :columns="columns"
-        :data-source="dataList"
-        :pagination="pagination"
-        :loading="loading"
-        row-key="id"
-      >
-        <template #status="{ record }">
-          <a-tag :color="getStatusColor(record.status)">{{ getStatusText(record.status) }}</a-tag>
-        </template>
-        <template #apiStatus="{ record }">
-          <a-tag :color="getApiStatusColor(record.apiExpireAt)">{{ getApiStatusText(record.apiExpireAt) }}</a-tag>
-        </template>
-        <template #action="{ record }">
-          <a-button type="link" @click="handleEdit(record)">编辑</a-button>
-          <a-button type="link" danger @click="handleUnbind(record.id)">解绑</a-button>
-          <a-button type="link" @click="handleDetail(record.id)">详情</a-button>
-        </template>
-      </a-table>
-    </a-card>
-
-    <!-- 绑定/编辑店铺对话框 -->
-    <a-modal
-      v-model:visible="modalVisible"
-      :title="modalTitle"
-      @ok="handleModalOk"
-      @cancel="handleModalCancel"
-    >
-      <a-form :model="formData" :rules="formRules" ref="formRef">
-        <a-form-item label="店铺名称" name="taobaoSellerNick">
-          <a-input v-model:value="formData.taobaoSellerNick" placeholder="请输入淘宝卖家昵称" />
-        </a-form-item>
-        <a-form-item label="API Session Key" name="apiSessionKey">
-          <a-input v-model:value="formData.apiSessionKey" placeholder="请输入淘宝开放平台Session Key" />
-        </a-form-item>
-        <a-form-item label="API授权过期时间" name="apiExpireAt">
-          <a-date-picker
-            v-model:value="formData.apiExpireAt"
-            format="YYYY-MM-DD HH:mm:ss"
-            show-time
-            style="width: 100%"
-          />
-        </a-form-item>
-        <a-form-item label="状态" name="status">
-          <a-select v-model:value="formData.status">
-            <a-select-option value="active">活跃</a-select-option>
-            <a-select-option value="disabled">禁用</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="绑定平台" name="bindPlatforms">
-          <a-select v-model:value="formData.bindPlatforms" mode="tags" placeholder="请选择绑定平台">
-            <a-select-option value="taobao">淘宝</a-select-option>
-            <a-select-option value="1688">1688</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="备注">
-          <a-textarea v-model:value="formData.remark" placeholder="请输入备注信息" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <BasicModal @register="registerModal" title="编辑店铺" width="600px" @ok="handleModalOk" destroyOnClose>
+      <BasicForm @register="registerForm" />
+    </BasicModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { shopApi } from '@/api/taolink/shop';
-import { message } from 'ant-design-vue';
+import type { ActionItem, BasicColumn, FormSchema } from '/@/components/Table';
+import { ref, unref } from 'vue';
+import { useRouter } from 'vue-router';
+import { BasicTable, TableAction } from '/@/components/Table';
+import { BasicModal, useModal } from '/@/components/Modal';
+import { BasicForm, useForm } from '/@/components/Form';
+import { useListPage } from '/@/hooks/system/useListPage';
+import { useMessage } from '/@/hooks/web/useMessage';
+import { taolinkShopApi } from '@/api/taolink/shop';
 
-// 搜索表单
-const searchForm = reactive({
-  taobaoSellerNick: '',
-  status: '',
-});
+defineOptions({ name: 'TaolinkShopIndex' });
 
-// 分页配置
-const pagination = reactive({
-  current: 1,
-  pageSize: 10,
-  total: 0,
-  showSizeChanger: true,
-  pageSizeOptions: ['10', '20', '50', '100'],
-  onChange: (current, pageSize) => {
-    pagination.current = current;
-    pagination.pageSize = pageSize;
-    loadShopList();
+const router = useRouter();
+const { createMessage } = useMessage();
+
+const columns: BasicColumn[] = [
+  {
+    title: '店铺名称',
+    dataIndex: 'taobaoSellerNick',
+    width: 200,
+    align: 'left',
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    width: 100,
+    slots: { customRender: 'status' },
+  },
+  {
+    title: 'API状态',
+    dataIndex: 'apiExpireAt',
+    width: 150,
+    slots: { customRender: 'apiStatus' },
+  },
+  {
+    title: '绑定平台',
+    dataIndex: 'bindPlatforms',
+    width: 160,
+    slots: { customRender: 'bindPlatforms' },
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createTime',
+    width: 180,
+  },
+];
+
+const searchFormSchema: FormSchema[] = [
+  {
+    field: 'taobaoSellerNick',
+    label: '店铺名称',
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入店铺名称',
+    },
+    colProps: { span: 8 },
+  },
+  {
+    field: 'status',
+    label: '状态',
+    component: 'Select',
+    componentProps: {
+      allowClear: true,
+      placeholder: '请选择状态',
+      options: [
+        { label: '活跃', value: 'active' },
+        { label: '禁用', value: 'disabled' },
+        { label: '已解绑', value: 'unbound' },
+      ],
+    },
+    colProps: { span: 8 },
+  },
+];
+
+const { tableContext } = useListPage({
+  designScope: 'taolink-shop-template',
+  tableProps: {
+    title: '店铺管理',
+    api: taolinkShopApi.list,
+    columns,
+    formConfig: {
+      schemas: searchFormSchema,
+    },
+    actionColumn: {
+      width: 220,
+      fixed: 'right',
+    },
   },
 });
 
-// 数据列表
-const dataList = ref<any[]>([]);
-const loading = ref(false);
+const [registerTable, { reload }] = tableContext;
 
-// 模态框
-const modalVisible = ref(false);
-const modalTitle = ref('绑定店铺');
-const formRef = ref();
-const formData = reactive({
-  id: '',
-  taobaoSellerNick: '',
-  apiSessionKey: '',
-  apiExpireAt: null,
-  status: 'active',
-  bindPlatforms: [],
-  remark: '',
+const editFormSchema: FormSchema[] = [
+  {
+    field: 'status',
+    label: '状态',
+    component: 'Select',
+    required: true,
+    componentProps: {
+      options: [
+        { label: '活跃', value: 'active' },
+        { label: '禁用', value: 'disabled' },
+      ],
+    },
+  },
+  {
+    field: 'bindPlatforms',
+    label: '绑定平台',
+    component: 'Select',
+    componentProps: {
+      mode: 'tags',
+      placeholder: '请选择绑定平台',
+      options: [
+        { label: '淘宝', value: 'taobao' },
+        { label: '1688', value: '1688' },
+      ],
+    },
+  },
+  {
+    field: 'remark',
+    label: '备注',
+    component: 'InputTextArea',
+    componentProps: {
+      placeholder: '请输入备注信息',
+    },
+  },
+];
+
+const currentEditId = ref<string>('');
+const [registerForm, { resetFields, setFieldsValue, validate }] = useForm({
+  schemas: editFormSchema,
+  showActionButtonGroup: false,
 });
 
-// 表单规则
-const formRules = {
-  taobaoSellerNick: [{ required: true, message: '请输入店铺名称', trigger: 'blur' }],
-  apiSessionKey: [{ required: true, message: '请输入API Session Key', trigger: 'blur' }],
-  apiExpireAt: [{ required: true, message: '请选择API授权过期时间', trigger: 'change' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
-};
+const [registerModal, { openModal, closeModal, setModalProps }] = useModal();
 
-// 加载店铺列表
-const loadShopList = async () => {
-  loading.value = true;
-  try {
-    const params = {
-      ...searchForm,
-      pageNo: pagination.current,
-      pageSize: pagination.pageSize,
-    };
-    const res = await shopApi.getShopList(params);
-    if (res.success) {
-      dataList.value = res.result.records;
-      pagination.total = res.result.total;
+const parseBindPlatforms = (value: unknown): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((v) => String(v));
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.map((v) => String(v));
+      return [value];
+    } catch {
+      return [value];
     }
-  } catch (error) {
-    message.error('加载店铺列表失败');
-  } finally {
-    loading.value = false;
+  }
+  return [];
+};
+
+const formatBindPlatforms = (text: unknown) => {
+  const list = parseBindPlatforms(text);
+  return list.length ? list.join(', ') : '-';
+};
+
+const getAuthorizeUrlFromResult = (res: unknown) => {
+  if (!res) return '';
+  if (typeof res === 'string') return res;
+  if (typeof res === 'object') {
+    const anyRes = res as any;
+    return anyRes.url || anyRes.authorizeUrl || '';
+  }
+  return '';
+};
+
+const handleBindShop = async () => {
+  try {
+    const res = await taolinkShopApi.getAuthorizeUrl({});
+    const url = getAuthorizeUrlFromResult(res);
+    if (!url) {
+      createMessage.error('获取授权链接失败');
+      return;
+    }
+    window.location.href = url;
+  } catch {
+    createMessage.error('网络错误，请稍后重试');
   }
 };
 
-// 搜索
-const handleSearch = () => {
-  pagination.current = 1;
-  loadShopList();
-};
-
-// 重置
-const resetForm = () => {
-  searchForm.taobaoSellerNick = '';
-  searchForm.status = '';
-  pagination.current = 1;
-  loadShopList();
-};
-
-// 新增
-const handleAdd = () => {
-  modalTitle.value = '绑定店铺';
-  Object.assign(formData, {
-    id: '',
-    taobaoSellerNick: '',
-    apiSessionKey: '',
-    apiExpireAt: null,
-    status: 'active',
-    bindPlatforms: [],
-    remark: '',
-  });
-  modalVisible.value = true;
-};
-
-// 编辑
-const handleEdit = (record: any) => {
-  modalTitle.value = '编辑店铺';
-  Object.assign(formData, record);
-  // 转换bindPlatforms为数组
-  if (record.bindPlatforms) {
-    formData.bindPlatforms = Array.isArray(record.bindPlatforms) 
-      ? record.bindPlatforms 
-      : JSON.parse(record.bindPlatforms);
-  } else {
-    formData.bindPlatforms = [];
-  }
-  modalVisible.value = true;
-};
-
-// 解绑
 const handleUnbind = async (id: string) => {
   try {
-    const res = await shopApi.unbindShop(id);
-    if (res.success) {
-      message.success('解绑成功');
-      loadShopList();
-    }
-  } catch (error) {
-    message.error('解绑失败');
+    await taolinkShopApi.unbind({ id });
+    createMessage.success('解绑成功');
+    await reload();
+  } catch {
+    createMessage.error('解绑失败');
   }
 };
 
-// 查看详情
 const handleDetail = (id: string) => {
-  // 跳转到详情页
-  console.log('查看详情:', id);
+  router.push(`/taolink/shop/detail/${id}`);
 };
 
-// 模态框确定
-const handleModalOk = async () => {
-  if (!formRef.value) return;
+const handleReauthorize = async (id: string) => {
   try {
-    await formRef.value.validate();
-    // 处理bindPlatforms为字符串
+    const res = await taolinkShopApi.reauthorize({ id });
+    const url = getAuthorizeUrlFromResult(res);
+    if (!url) {
+      createMessage.error('获取授权链接失败');
+      return;
+    }
+    window.location.href = url;
+  } catch {
+    createMessage.error('网络错误，请稍后重试');
+  }
+};
+
+const handleEdit = async (record: any) => {
+  await resetFields();
+  currentEditId.value = record?.id || '';
+  await setFieldsValue({
+    status: record?.status,
+    bindPlatforms: parseBindPlatforms(record?.bindPlatforms),
+    remark: record?.remark,
+  });
+  openModal(true);
+};
+
+const handleModalOk = async () => {
+  try {
+    const values = await validate();
+    setModalProps({ confirmLoading: true });
     const submitData = {
-      ...formData,
-      bindPlatforms: JSON.stringify(formData.bindPlatforms),
+      ...values,
+      id: unref(currentEditId),
+      bindPlatforms: JSON.stringify(values.bindPlatforms || []),
     };
-    let res;
-    if (formData.id) {
-      res = await shopApi.editShop(submitData);
-    } else {
-      res = await shopApi.bindShop(submitData);
-    }
-    if (res.success) {
-      message.success(formData.id ? '编辑成功' : '绑定成功');
-      modalVisible.value = false;
-      loadShopList();
-    }
-  } catch (error) {
-    console.error('提交失败:', error);
+    await taolinkShopApi.edit(submitData);
+    createMessage.success('编辑成功');
+    closeModal();
+    await reload();
+  } finally {
+    setModalProps({ confirmLoading: false });
   }
 };
 
-// 模态框取消
-const handleModalCancel = () => {
-  modalVisible.value = false;
-  if (formRef.value) {
-    formRef.value.resetFields();
-  }
+const getTableActions = (record: any): ActionItem[] => {
+  return [
+    {
+      label: '编辑',
+      onClick: handleEdit.bind(null, record),
+    },
+    {
+      label: '解绑',
+      color: 'error',
+      popConfirm: {
+        title: '确认解绑该店铺？',
+        placement: 'left',
+        confirm: handleUnbind.bind(null, record.id),
+      },
+    },
+    {
+      label: '详情',
+      onClick: handleDetail.bind(null, record.id),
+    },
+    {
+      label: '重新授权',
+      ifShow: record?.status === 'active',
+      onClick: handleReauthorize.bind(null, record.id),
+    },
+  ];
 };
 
-// 获取状态颜色
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'active':
@@ -273,7 +302,6 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// 获取状态文本
 const getStatusText = (status: string) => {
   switch (status) {
     case 'active':
@@ -287,7 +315,6 @@ const getStatusText = (status: string) => {
   }
 };
 
-// 获取API状态颜色
 const getApiStatusColor = (expireAt: string) => {
   if (!expireAt) return 'red';
   const expireDate = new Date(expireAt);
@@ -298,7 +325,6 @@ const getApiStatusColor = (expireAt: string) => {
   return 'green';
 };
 
-// 获取API状态文本
 const getApiStatusText = (expireAt: string) => {
   if (!expireAt) return '未授权';
   const expireDate = new Date(expireAt);
@@ -308,70 +334,6 @@ const getApiStatusText = (expireAt: string) => {
   if (daysLeft < 7) return `即将过期(${daysLeft}天)`;
   return '正常';
 };
-
-// 表格列配置
-const columns = [
-  {
-    title: '店铺名称',
-    dataIndex: 'taobaoSellerNick',
-    key: 'taobaoSellerNick',
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    slots: { customRender: 'status' },
-  },
-  {
-    title: 'API状态',
-    key: 'apiStatus',
-    slots: { customRender: 'apiStatus' },
-  },
-  {
-    title: '绑定平台',
-    dataIndex: 'bindPlatforms',
-    key: 'bindPlatforms',
-    render: (text: any) => {
-      if (!text) return '-';
-      try {
-        const platforms = Array.isArray(text) ? text : JSON.parse(text);
-        return platforms.join(', ');
-      } catch {
-        return text;
-      }
-    },
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    key: 'createTime',
-  },
-  {
-    title: '操作',
-    key: 'action',
-    slots: { customRender: 'action' },
-  },
-];
-
-// 初始加载
-onMounted(() => {
-  loadShopList();
-});
 </script>
 
-<style scoped>
-.shop-list-container {
-  padding: 20px;
-}
-
-.search-area {
-  margin-bottom: 16px;
-  padding: 16px;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.action-area {
-  margin-bottom: 16px;
-}
-</style>
+<style scoped></style>

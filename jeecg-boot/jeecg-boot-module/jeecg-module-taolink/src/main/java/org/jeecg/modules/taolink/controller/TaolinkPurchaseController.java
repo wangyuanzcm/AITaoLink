@@ -73,12 +73,44 @@ public class TaolinkPurchaseController extends JeecgController<TaolinkPurchase, 
         return Result.OK(entity);
     }
 
-    @Data
     public static class TrackingRequest {
         private String sourceTrackingCompany;
         private String sourceTrackingNo;
         private Double freightCost;
         private String remark;
+
+        // Getters and Setters
+        public String getSourceTrackingCompany() {
+            return sourceTrackingCompany;
+        }
+
+        public void setSourceTrackingCompany(String sourceTrackingCompany) {
+            this.sourceTrackingCompany = sourceTrackingCompany;
+        }
+
+        public String getSourceTrackingNo() {
+            return sourceTrackingNo;
+        }
+
+        public void setSourceTrackingNo(String sourceTrackingNo) {
+            this.sourceTrackingNo = sourceTrackingNo;
+        }
+
+        public Double getFreightCost() {
+            return freightCost;
+        }
+
+        public void setFreightCost(Double freightCost) {
+            this.freightCost = freightCost;
+        }
+
+        public String getRemark() {
+            return remark;
+        }
+
+        public void setRemark(String remark) {
+            this.remark = remark;
+        }
     }
 
     @Operation(summary = "代发订单发货回填")

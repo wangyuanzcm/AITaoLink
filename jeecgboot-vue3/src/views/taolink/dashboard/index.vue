@@ -84,10 +84,7 @@
       <div class="charts-section">
         <a-card title="全局趋势" class="chart-card">
           <div class="chart-container">
-            <v-chart
-              :option="trendChartOption"
-              style="width: 100%; height: 400px"
-            />
+            <div ref="trendChartRef" style="width: 100%; height: 400px"></div>
           </div>
         </a-card>
       </div>
@@ -127,9 +124,9 @@
           <a-col :span="12">
             <a-card title="预警汇总" class="alerts-card">
               <div class="alerts-content">
-                <div class="alert-item" v-for="(count, type) in alertsData" :key="type" v-if="type !== 'alertDetails'">
-                  <div class="alert-type">{{ getAlertTypeLabel(type) }}</div>
-                  <div class="alert-count">{{ count }}</div>
+                <div class="alert-item" v-for="item in alertsSummary" :key="item.key">
+                  <div class="alert-type">{{ getAlertTypeLabel(item.key) }}</div>
+                  <div class="alert-count">{{ item.count }}</div>
                 </div>
                 <div class="alert-more">
                   <a-button type="link" @click="goToAlerts">查看详情</a-button>
@@ -156,23 +153,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import type { EChartsOption } from 'echarts';
+import type { Ref } from 'vue';
+import { ref, onMounted, computed, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
-import { VChart } from '@visactor/vue3-vchart';
-import { BarChart, LineChart, Point, Title, Tooltip, Legend, Axis } from '@visactor/vchart';
+import { useECharts } from '/@/hooks/web/useECharts';
 
-// 注册 VChart 组件
-VChart.use([BarChart, LineChart, Point, Title, Tooltip, Legend, Axis]);
+defineOptions({ name: 'TaolinkDashboardIndex' });
 
 const router = useRouter();
 
 // 数据状态
 const loading = ref(false);
-const overviewData = ref({});
-const healthData = ref({});
-const alertsData = ref({});
-const shopRanking = ref([]);
-const trendData = ref([]);
+
+interface OverviewData {
+  shopCount: number;
+  productCount: number;
+  listedProductCount: number;
+  todayOrderCount: number;
+  todayGmv: number;
+  inventorySkuCount: number;
+  lowStockSkuCount: number;
+  overstockSkuCount: number;
+}
+
+interface HealthData {
+  healthScore: number;
+  turnoverRate: number;
+  inventoryValue: number;
+  statusCounts: Record<string, number>;
+}
+
+interface AlertsData {
+  lowStockAlerts: number;
+  overstockAlerts: number;
+  orderAlerts: number;
+  refundAlerts: number;
+}
+
+interface ShopRankingItem {
+  shopId: string;
+  shopName: string;
+  orderCount: number;
+  gmv: number;
+  status: string;
+}
+
+interface TrendItem {
+  date: string;
+  orderCount: number;
+  gmv: number;
+}
+
+const overviewData = ref<Partial<OverviewData>>({});
+const healthData = ref<Partial<HealthData>>({});
+const alertsData = ref<Partial<AlertsData>>({});
+const shopRanking = ref<ShopRankingItem[]>([]);
+const trendData = ref<TrendItem[]>([]);
 
 // 排行表格列
 const rankingColumns = [
@@ -197,7 +234,7 @@ const rankingColumns = [
     title: 'GMV',
     dataIndex: 'gmv',
     key: 'gmv',
-    customRender: (text) => `¥${(text / 100).toFixed(2)}`
+    customRender: ({ text }) => `¥${(Number(text ?? 0) / 100).toFixed(2)}`,
   },
   {
     title: '状态',
@@ -213,8 +250,11 @@ const rankingColumns = [
   }
 ];
 
+const trendChartRef = ref<HTMLDivElement | null>(null);
+const { setOptions: setTrendOptions } = useECharts(trendChartRef as Ref<HTMLDivElement>);
+
 // 趋势图表配置
-const trendChartOption = computed(() => {
+const trendChartOption = computed<EChartsOption>(() => {
   const dates = trendData.value.map(item => item.date);
   const orderCounts = trendData.value.map(item => item.orderCount);
   const gmvValues = trendData.value.map(item => item.gmv / 100); // 转换为元
@@ -276,6 +316,18 @@ const trendChartOption = computed(() => {
       }
     ]
   };
+});
+
+const alertsSummary = computed(() => {
+  const data = alertsData.value || {};
+  return Object.entries(data)
+    .filter(([, count]) => typeof count === 'number')
+    .map(([key, count]) => ({ key, count: Number(count) }));
+});
+
+watchEffect(() => {
+  if (!trendChartRef.value) return;
+  setTrendOptions(trendChartOption.value);
 });
 
 // 状态标签映射
@@ -344,7 +396,7 @@ const mockShopRanking = [
   { shopId: '5', shopName: '小红书店', orderCount: 450, gmv: 1500000, status: 'inactive' }
 ];
 
-const mockTrendData = [];
+const mockTrendData: TrendItem[] = [];
 const today = new Date();
 for (let i = 29; i >= 0; i--) {
   const date = new Date(today);

@@ -8,23 +8,55 @@
 
 -- 1.1 店铺表
 CREATE TABLE IF NOT EXISTS `taolink_shop` (
-  `id` VARCHAR(32) NOT NULL COMMENT '主键',
-  `tenant_id` VARCHAR(32) NOT NULL COMMENT '租户ID',
-  `taobao_seller_nick` VARCHAR(100) NOT NULL COMMENT '淘宝卖家昵称',
-  `api_session_key` VARCHAR(255) NOT NULL COMMENT 'API会话密钥',
-  `api_expire_at` DATETIME NOT NULL COMMENT 'API授权过期时间',
-  `status` VARCHAR(20) NOT NULL COMMENT '状态：active/disabled/unbound',
-  `bind_platforms` JSON DEFAULT NULL COMMENT '绑定的平台：["taobao","1688"]',
-  `owner_id` VARCHAR(32) NOT NULL COMMENT '关联的用户ID',
-  `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注信息',
-  `monitoring_enabled` BOOLEAN DEFAULT TRUE COMMENT '是否启用监控',
-  `monitoring_days` INT DEFAULT 7 COMMENT '监控天数回溯',
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  INDEX `idx_tenant_id` (`tenant_id`),
-  INDEX `idx_taobao_seller_nick` (`taobao_seller_nick`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户淘宝店铺绑定表';
+    `id` VARCHAR(36) NOT NULL COMMENT '主键',
+    `create_by` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+    `create_by_org` VARCHAR(50) DEFAULT NULL,
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_by` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+    `update_time` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `sys_org_code` VARCHAR(64) DEFAULT NULL COMMENT '部门编码',
+    `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID',
+    `bpm_status` VARCHAR(32) DEFAULT NULL,
+
+    `taobao_seller_nick` VARCHAR(100) NOT NULL COMMENT '淘宝卖家昵称（店铺标识）',
+    `api_session_key` VARCHAR(1000) DEFAULT NULL COMMENT '淘宝开放平台 session key',
+    `api_expire_at` DATETIME DEFAULT NULL COMMENT 'API授权过期时间',
+    `status` VARCHAR(20) DEFAULT 'active' COMMENT '状态: active/disabled/unbound',
+    `bind_platforms` VARCHAR(200) DEFAULT NULL COMMENT '绑定平台列表，如 ["taobao","1688"]',
+    `owner_id` VARCHAR(36) NOT NULL COMMENT '绑定人用户ID（关联 sys_user）',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+    `monitoring_enabled` TINYINT(1) DEFAULT 1 COMMENT '是否启用监控',
+    `monitoring_days` INT DEFAULT 7 COMMENT '监控回溯天数',
+
+    PRIMARY KEY (`id`),
+    INDEX `idx_owner_id` (`owner_id`),
+    INDEX `idx_status` (`status`),
+    UNIQUE INDEX `uk_tenant_tao_nick` (`tenant_id`, `taobao_seller_nick`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='淘宝店铺绑定表';
+
+-- 1.x 采购明细表（基础表，若未初始化则创建；后续 ALTER 会补齐更多字段）
+CREATE TABLE IF NOT EXISTS `taolink_purchase_line` (
+    `id` VARCHAR(32) NOT NULL COMMENT '主键',
+    `create_by` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+    `create_by_org` VARCHAR(50) DEFAULT NULL,
+    `create_time` DATETIME DEFAULT NULL COMMENT '创建时间',
+    `update_by` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+    `update_time` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `sys_org_code` VARCHAR(64) DEFAULT NULL COMMENT '部门编码',
+    `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID',
+    `bpm_status` VARCHAR(32) DEFAULT NULL,
+
+    `purchase_id` VARCHAR(32) NOT NULL COMMENT '采购单ID',
+    `source_offer_id` VARCHAR(32) NOT NULL COMMENT '来源商品ID',
+    `source_sku_id` VARCHAR(64) DEFAULT NULL COMMENT '来源SKU ID',
+    `qty` INT NOT NULL COMMENT '数量',
+    `unit_cost` INT DEFAULT NULL COMMENT '单价成本（分）',
+    `spec_snapshot_json` LONGTEXT DEFAULT NULL COMMENT '规格快照JSON（字符串）',
+
+    PRIMARY KEY (`id`),
+    INDEX `idx_purchase_line_purchase_id` (`purchase_id`),
+    INDEX `idx_purchase_line_offer` (`source_offer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购单行';
 
 -- 1.2 搜索缓存表
 CREATE TABLE IF NOT EXISTS `taolink_search_cache` (

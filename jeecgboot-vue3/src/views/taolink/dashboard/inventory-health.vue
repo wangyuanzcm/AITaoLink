@@ -46,10 +46,7 @@
           <a-col :span="12">
             <a-card title="库存状态分布">
               <div class="chart-container">
-                <v-chart
-                  :option="pieChartOption"
-                  style="width: 100%; height: 300px"
-                />
+                <div ref="pieChartRef" style="width: 100%; height: 300px"></div>
               </div>
             </a-card>
           </a-col>
@@ -57,10 +54,7 @@
           <a-col :span="12">
             <a-card title="库存状态数量">
               <div class="chart-container">
-                <v-chart
-                  :option="barChartOption"
-                  style="width: 100%; height: 300px"
-                />
+                <div ref="barChartRef" style="width: 100%; height: 300px"></div>
               </div>
             </a-card>
           </a-col>
@@ -83,10 +77,7 @@
       <div class="health-trend">
         <a-card title="健康度趋势">
           <div class="chart-container">
-            <v-chart
-              :option="trendChartOption"
-              style="width: 100%; height: 400px"
-            />
+            <div ref="trendChartRef" style="width: 100%; height: 400px"></div>
           </div>
         </a-card>
       </div>
@@ -95,12 +86,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { VChart } from '@visactor/vue3-vchart';
-import { PieChart, BarChart, LineChart, Title, Tooltip, Legend, Axis, FunnelChart } from '@visactor/vchart';
-
-// 注册 VChart 组件
-VChart.use([PieChart, BarChart, LineChart, Title, Tooltip, Legend, Axis, FunnelChart]);
+import type { EChartsOption } from 'echarts';
+import type { Ref } from 'vue';
+import { ref, computed, onMounted, h, watchEffect } from 'vue';
+import { Button, Tag } from 'ant-design-vue';
+import { useECharts } from '/@/hooks/web/useECharts';
 
 // 数据状态
 const loading = ref(false);
@@ -184,9 +174,7 @@ const statusColumns = [
     title: '库存状态',
     dataIndex: 'label',
     key: 'label',
-    customRender: (_, record) => (
-      <a-tag :color="record.color">{record.label}</a-tag>
-    )
+    customRender: ({ record }) => h(Tag, { color: record.color }, () => record.label),
   },
   {
     title: '数量',
@@ -197,19 +185,25 @@ const statusColumns = [
     title: '占比',
     dataIndex: 'percentage',
     key: 'percentage',
-    customRender: (text) => `${text}%`
+    customRender: ({ text }) => `${text}%`,
   },
   {
     title: '操作',
     key: 'action',
-    customRender: (_, record) => (
-      <a-button type="link" size="small">查看详情</a-button>
-    )
+    customRender: () => h(Button, { type: 'link', size: 'small' }, () => '查看详情'),
   }
 ];
 
+const pieChartRef = ref<HTMLDivElement | null>(null);
+const barChartRef = ref<HTMLDivElement | null>(null);
+const trendChartRef = ref<HTMLDivElement | null>(null);
+
+const { setOptions: setPieOptions } = useECharts(pieChartRef as Ref<HTMLDivElement>);
+const { setOptions: setBarOptions } = useECharts(barChartRef as Ref<HTMLDivElement>);
+const { setOptions: setTrendOptions } = useECharts(trendChartRef as Ref<HTMLDivElement>);
+
 // 饼图配置
-const pieChartOption = computed(() => {
+const pieChartOption = computed<EChartsOption>(() => {
   const data = inventoryStatusList.value.map(item => ({
     name: item.label,
     value: item.count
@@ -247,7 +241,7 @@ const pieChartOption = computed(() => {
 });
 
 // 柱状图配置
-const barChartOption = computed(() => {
+const barChartOption = computed<EChartsOption>(() => {
   const data = inventoryStatusList.value;
   const statusNames = data.map(item => item.label);
   const counts = data.map(item => item.count);
@@ -294,7 +288,7 @@ const barChartOption = computed(() => {
 });
 
 // 健康度趋势图表配置
-const trendChartOption = computed(() => {
+const trendChartOption = computed<EChartsOption>(() => {
   const dates = healthTrendData.value.map(item => item.date);
   const scores = healthTrendData.value.map(item => item.score);
   
@@ -334,20 +328,26 @@ const trendChartOption = computed(() => {
           color: '#1890ff'
         },
         areaStyle: {
-          color: new VChart.GradientColor({
-            x0: 0,
-            y0: 0,
-            x1: 0,
-            y1: 1,
-            stops: [
-              { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-              { offset: 1, color: 'rgba(24, 144, 255, 0.1)' }
-            ]
-          })
+          color: 'rgba(24, 144, 255, 0.2)',
         }
       }
     ]
   };
+});
+
+watchEffect(() => {
+  if (!pieChartRef.value) return;
+  setPieOptions(pieChartOption.value);
+});
+
+watchEffect(() => {
+  if (!barChartRef.value) return;
+  setBarOptions(barChartOption.value);
+});
+
+watchEffect(() => {
+  if (!trendChartRef.value) return;
+  setTrendOptions(trendChartOption.value);
 });
 
 // 初始化数据

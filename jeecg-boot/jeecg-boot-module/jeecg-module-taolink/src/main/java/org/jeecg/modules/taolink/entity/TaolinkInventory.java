@@ -10,7 +10,6 @@ import org.jeecg.common.system.base.entity.JeecgEntity;
 
 import java.io.Serializable;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "库存台账")
@@ -36,10 +35,72 @@ public class TaolinkInventory extends JeecgEntity implements Serializable {
     private Integer overstockDays;
 
     @Schema(description = "可用库存（计算字段）", example = "0")
+    @TableField(exist = false)
+    private Integer available;
+
     public Integer getAvailable() {
         int onHandVal = onHand == null ? 0 : onHand;
         int reservedVal = reserved == null ? 0 : reserved;
         return Math.max(0, onHandVal - reservedVal);
+    }
+
+    public void setAvailable(Integer available) {
+        this.available = available;
+    }
+
+    // Getters and Setters
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public TaolinkInventory setWarehouseId(String warehouseId) {
+        this.warehouseId = warehouseId;
+        return this;
+    }
+
+    public String getProductSkuId() {
+        return productSkuId;
+    }
+
+    public TaolinkInventory setProductSkuId(String productSkuId) {
+        this.productSkuId = productSkuId;
+        return this;
+    }
+
+    public Integer getOnHand() {
+        return onHand;
+    }
+
+    public TaolinkInventory setOnHand(Integer onHand) {
+        this.onHand = onHand;
+        return this;
+    }
+
+    public Integer getReserved() {
+        return reserved;
+    }
+
+    public TaolinkInventory setReserved(Integer reserved) {
+        this.reserved = reserved;
+        return this;
+    }
+
+    public Integer getWarningMin() {
+        return warningMin;
+    }
+
+    public TaolinkInventory setWarningMin(Integer warningMin) {
+        this.warningMin = warningMin;
+        return this;
+    }
+
+    public Integer getOverstockDays() {
+        return overstockDays;
+    }
+
+    public TaolinkInventory setOverstockDays(Integer overstockDays) {
+        this.overstockDays = overstockDays;
+        return this;
     }
 }
 

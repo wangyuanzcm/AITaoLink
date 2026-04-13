@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "采购单行")
@@ -60,5 +59,110 @@ public class TaolinkPurchaseLine extends JeecgEntity implements Serializable {
 
     @Schema(description = "总成本 = unit_cost*qty + freight_cost（分）", example = "0")
     private Integer totalCost;
+
+    // Getters and Setters
+    public String getPurchaseId() {
+        return purchaseId;
+    }
+
+    public void setPurchaseId(String purchaseId) {
+        this.purchaseId = purchaseId;
+    }
+
+    public String getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId;
+    }
+
+    public String getSourceOfferId() {
+        return sourceOfferId;
+    }
+
+    public void setSourceOfferId(String sourceOfferId) {
+        this.sourceOfferId = sourceOfferId;
+    }
+
+    public String getSourceSkuId() {
+        return sourceSkuId;
+    }
+
+    public void setSourceSkuId(String sourceSkuId) {
+        this.sourceSkuId = sourceSkuId;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public void setQty(Integer qty) {
+        this.qty = qty;
+    }
+
+    public Integer getUnitCost() {
+        return unitCost;
+    }
+
+    public void setUnitCost(Integer unitCost) {
+        this.unitCost = unitCost;
+    }
+
+    public String getSpecSnapshotJson() {
+        return specSnapshotJson;
+    }
+
+    public void setSpecSnapshotJson(String specSnapshotJson) {
+        this.specSnapshotJson = specSnapshotJson;
+    }
+
+    public String getSourceOrderId() {
+        return sourceOrderId;
+    }
+
+    public void setSourceOrderId(String sourceOrderId) {
+        this.sourceOrderId = sourceOrderId;
+    }
+
+    public String getSourceTrackingCompany() {
+        return sourceTrackingCompany;
+    }
+
+    public void setSourceTrackingCompany(String sourceTrackingCompany) {
+        this.sourceTrackingCompany = sourceTrackingCompany;
+    }
+
+    public String getSourceTrackingNo() {
+        return sourceTrackingNo;
+    }
+
+    public void setSourceTrackingNo(String sourceTrackingNo) {
+        this.sourceTrackingNo = sourceTrackingNo;
+    }
+
+    public Date getShippedAt() {
+        return shippedAt;
+    }
+
+    public void setShippedAt(Date shippedAt) {
+        this.shippedAt = shippedAt;
+    }
+
+    public Integer getFreightCost() {
+        return freightCost;
+    }
+
+    public void setFreightCost(Integer freightCost) {
+        this.freightCost = freightCost;
+    }
+
+    public Integer getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(Integer totalCost) {
+        this.totalCost = totalCost;
+    }
 }
 

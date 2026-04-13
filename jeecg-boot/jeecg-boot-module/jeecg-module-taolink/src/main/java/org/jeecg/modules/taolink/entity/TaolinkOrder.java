@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "订单（淘宝同步）")
@@ -39,5 +38,65 @@ public class TaolinkOrder extends JeecgEntity implements Serializable {
 
     @Schema(description = "淘宝原始回包JSON（字符串）")
     private String rawJson;
+
+    @Schema(description = "订单总金额")
+    private Integer totalAmount;
+
+    // Getters and Setters
+    public String getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId;
+    }
+
+    public String getPlatformOrderId() {
+        return platformOrderId;
+    }
+
+    public void setPlatformOrderId(String platformOrderId) {
+        this.platformOrderId = platformOrderId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Date getPayTime() {
+        return payTime;
+    }
+
+    public void setPayTime(Date payTime) {
+        this.payTime = payTime;
+    }
+
+    public String getReceiverSnapshotJson() {
+        return receiverSnapshotJson;
+    }
+
+    public void setReceiverSnapshotJson(String receiverSnapshotJson) {
+        this.receiverSnapshotJson = receiverSnapshotJson;
+    }
+
+    public String getRawJson() {
+        return rawJson;
+    }
+
+    public void setRawJson(String rawJson) {
+        this.rawJson = rawJson;
+    }
+
+    public Integer getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(Integer totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 }
 

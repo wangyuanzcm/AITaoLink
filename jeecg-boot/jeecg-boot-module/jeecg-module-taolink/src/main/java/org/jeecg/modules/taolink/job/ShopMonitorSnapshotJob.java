@@ -22,6 +22,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class ShopMonitorSnapshotJob implements Job {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShopMonitorSnapshotJob.class);
 
     @Autowired
     private ITaolinkMonitorDailySnapshotService monitorDailySnapshotService;

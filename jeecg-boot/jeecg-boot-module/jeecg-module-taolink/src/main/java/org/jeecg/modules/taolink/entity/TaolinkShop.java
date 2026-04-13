@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "淘宝店铺绑定")
@@ -40,6 +39,9 @@ public class TaolinkShop extends JeecgEntity implements Serializable {
     @Schema(description = "绑定人用户ID（JeecgBoot sys_user.id）")
     private String ownerId;
 
+    @Schema(description = "租户ID")
+    private String tenantId;
+
     @Schema(description = "备注")
     private String remark;
 
@@ -48,4 +50,85 @@ public class TaolinkShop extends JeecgEntity implements Serializable {
 
     @Schema(description = "监控回溯天数", example = "7")
     private Integer monitoringDays;
+
+    // Getters and Setters
+    public String getTaobaoSellerNick() {
+        return taobaoSellerNick;
+    }
+
+    public void setTaobaoSellerNick(String taobaoSellerNick) {
+        this.taobaoSellerNick = taobaoSellerNick;
+    }
+
+    public String getApiSessionKey() {
+        return apiSessionKey;
+    }
+
+    public void setApiSessionKey(String apiSessionKey) {
+        this.apiSessionKey = apiSessionKey;
+    }
+
+    public Date getApiExpireAt() {
+        return apiExpireAt;
+    }
+
+    public void setApiExpireAt(Date apiExpireAt) {
+        this.apiExpireAt = apiExpireAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getBindPlatforms() {
+        return bindPlatforms;
+    }
+
+    public void setBindPlatforms(String bindPlatforms) {
+        this.bindPlatforms = bindPlatforms;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public Boolean getMonitoringEnabled() {
+        return monitoringEnabled;
+    }
+
+    public void setMonitoringEnabled(Boolean monitoringEnabled) {
+        this.monitoringEnabled = monitoringEnabled;
+    }
+
+    public Integer getMonitoringDays() {
+        return monitoringDays;
+    }
+
+    public void setMonitoringDays(Integer monitoringDays) {
+        this.monitoringDays = monitoringDays;
+    }
 }

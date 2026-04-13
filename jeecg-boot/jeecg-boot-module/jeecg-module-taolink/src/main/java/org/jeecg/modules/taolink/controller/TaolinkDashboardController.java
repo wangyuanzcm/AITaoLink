@@ -24,13 +24,13 @@ import java.util.Map;
  * 提供跨店铺的全局数据统计和分析接口
  */
 @Slf4j
-@Tag(name = "TaoLink-全局分析看板")
+@Tag(name = "TaoLink-数据看板")
 @RestController
 @RequestMapping("/taolink/dashboard")
 public class TaolinkDashboardController {
-
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaolinkDashboardController.class);
     @Autowired
-    private ITaolinkShopService shopService;
+    private ITaolinkShopService taolinkShopService;
 
     @Autowired
     private ITaolinkProductService productService;
@@ -52,7 +52,7 @@ public class TaolinkDashboardController {
             Map<String, Object> overview = new HashMap<>();
             
             // 统计店铺数量
-            long shopCount = shopService.count();
+            long shopCount = taolinkShopService.count();
             overview.put("shopCount", shopCount);
             
             // 统计商品总数
@@ -98,7 +98,7 @@ public class TaolinkDashboardController {
     @GetMapping(value = "/global/shop-ranking")
     public Result<List<Map<String, Object>>> getShopRanking() {
         try {
-            List<Map<String, Object>> rankingList = shopService.getShopRanking();
+            List<Map<String, Object>> rankingList = taolinkShopService.getShopRanking();
             return Result.OK(rankingList);
         } catch (Exception e) {
             log.error("获取店铺排行失败", e);

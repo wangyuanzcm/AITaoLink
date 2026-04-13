@@ -21,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/taolink/settlement-records")
 @Slf4j
 public class TaolinkSettlementRecordController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaolinkSettlementRecordController.class);
 
     @Autowired
     private ITaolinkSettlementRecordService taolinkSettlementRecordService;

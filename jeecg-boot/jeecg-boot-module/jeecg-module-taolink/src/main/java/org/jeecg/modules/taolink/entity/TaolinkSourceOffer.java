@@ -12,7 +12,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serializable;
 import java.util.Date;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "来源商品（1688/淘宝）")
@@ -60,5 +59,123 @@ public class TaolinkSourceOffer extends JeecgEntity implements Serializable {
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date fetchedAt;
+
+    // Getters and Setters
+    public String getShopId() {
+        return shopId;
+    }
+
+    public TaolinkSourceOffer setShopId(String shopId) {
+        this.shopId = shopId;
+        return this;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public TaolinkSourceOffer setPlatform(String platform) {
+        this.platform = platform;
+        return this;
+    }
+
+    public String getNumIid() {
+        return numIid;
+    }
+
+    public TaolinkSourceOffer setNumIid(String numIid) {
+        this.numIid = numIid;
+        return this;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public TaolinkSourceOffer setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public String getDetailUrl() {
+        return detailUrl;
+    }
+
+    public TaolinkSourceOffer setDetailUrl(String detailUrl) {
+        this.detailUrl = detailUrl;
+        return this;
+    }
+
+    public String getSellerNick() {
+        return sellerNick;
+    }
+
+    public TaolinkSourceOffer setSellerNick(String sellerNick) {
+        this.sellerNick = sellerNick;
+        return this;
+    }
+
+    public Integer getPriceMin() {
+        return priceMin;
+    }
+
+    public TaolinkSourceOffer setPriceMin(Integer priceMin) {
+        this.priceMin = priceMin;
+        return this;
+    }
+
+    public Integer getPriceMax() {
+        return priceMax;
+    }
+
+    public TaolinkSourceOffer setPriceMax(Integer priceMax) {
+        this.priceMax = priceMax;
+        return this;
+    }
+
+    public Integer getMinNum() {
+        return minNum;
+    }
+
+    public TaolinkSourceOffer setMinNum(Integer minNum) {
+        this.minNum = minNum;
+        return this;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public TaolinkSourceOffer setLocation(String location) {
+        this.location = location;
+        return this;
+    }
+
+    public String getRiskLevel() {
+        return riskLevel;
+    }
+
+    public TaolinkSourceOffer setRiskLevel(String riskLevel) {
+        this.riskLevel = riskLevel;
+        return this;
+    }
+
+    public String getRawJson() {
+        return rawJson;
+    }
+
+    public TaolinkSourceOffer setRawJson(String rawJson) {
+        this.rawJson = rawJson;
+        return this;
+    }
+
+    public Date getFetchedAt() {
+        return fetchedAt;
+    }
+
+    public TaolinkSourceOffer setFetchedAt(Date fetchedAt) {
+        this.fetchedAt = fetchedAt;
+        return this;
+    }
 }
 

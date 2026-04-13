@@ -19,12 +19,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Tag(name = "TaoLink-店铺监控")
+@Tag(name = "TaoLink-监控")
 @RestController
 @RequestMapping("/taolink/monitor")
 public class TaolinkMonitorController extends JeecgController<TaolinkMonitorDailySnapshot, ITaolinkMonitorDailySnapshotService> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaolinkMonitorController.class);
     @Autowired
-    private ITaolinkMonitorDailySnapshotService taolinkMonitorDailySnapshotService;
+    private ITaolinkMonitorDailySnapshotService monitorDailySnapshotService;
 
     @Operation(summary = "店铺每日快照概览")
     @GetMapping(value = "/{shopId}/overview")
@@ -35,7 +36,7 @@ public class TaolinkMonitorController extends JeecgController<TaolinkMonitorDail
             query.eq(TaolinkMonitorDailySnapshot::getShopId, shopId);
             query.orderByDesc(TaolinkMonitorDailySnapshot::getSnapshotDate);
             query.last("LIMIT 1");
-            TaolinkMonitorDailySnapshot latest = taolinkMonitorDailySnapshotService.getOne(query);
+            TaolinkMonitorDailySnapshot latest = monitorDailySnapshotService.getOne(query);
 
             if (latest == null) {
                 return Result.error("未找到该店铺的监控数据");
@@ -67,7 +68,7 @@ public class TaolinkMonitorController extends JeecgController<TaolinkMonitorDail
             query.orderByDesc(TaolinkMonitorDailySnapshot::getSnapshotDate);
             query.last("LIMIT " + days);
 
-            List<TaolinkMonitorDailySnapshot> snapshots = taolinkMonitorDailySnapshotService.list(query);
+            List<TaolinkMonitorDailySnapshot> snapshots = monitorDailySnapshotService.list(query);
             Collections.reverse(snapshots);
 
             List<Map<String, Object>> trendData = snapshots.stream().map(snapshot -> {

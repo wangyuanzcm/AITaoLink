@@ -24,10 +24,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Tag(name = "TaoLink-结算管理")
+@Tag(name = "TaoLink-结算")
 @RestController
 @RequestMapping("/taolink/settlement")
 public class TaolinkSettlementController extends JeecgController<TaolinkSettlementRecord, ITaolinkSettlementRecordService> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaolinkSettlementController.class);
     @Autowired
     private ITaolinkSettlementRecordService taolinkSettlementRecordService;
 

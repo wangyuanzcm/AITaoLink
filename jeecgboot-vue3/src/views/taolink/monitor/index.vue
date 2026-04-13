@@ -74,22 +74,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 import * as echarts from 'echarts';
-import { useStore } from 'pinia';
-import { taolinkStore } from '@/store/modules/taolink';
+import { useTaolinkStore } from '/@/store/modules/taolink';
 
-// 状态管理
-const store = useStore();
-const taolink = taolinkStore();
+defineOptions({ name: 'TaolinkMonitorIndex' });
+
+const taolink = useTaolinkStore();
 
 // 响应式数据
-const overviewData = ref({});
-const trendData = ref([]);
-const rankings = ref([]);
+interface OverviewData {
+  productCount: number;
+  listedCount: number;
+  orderCount: number;
+  orderAmount: number;
+  refundCount: number;
+  inventoryItemCount: number;
+}
+
+interface TrendItem {
+  snapshotDate: string;
+  productCount: number;
+  listedCount: number;
+  orderCount: number;
+  orderAmount: number;
+}
+
+interface RankingItem {
+  rank: number;
+  productId: string;
+  productName: string;
+  sales: number;
+  amount: number;
+  inventory: number;
+}
+
+const overviewData = ref<Partial<OverviewData>>({});
+const trendData = ref<TrendItem[]>([]);
+const rankings = ref<RankingItem[]>([]);
 const loading = ref(false);
-const chartRef = ref<HTMLElement>();
+const chartRef = ref<HTMLDivElement | null>(null);
 let chart: echarts.ECharts | null = null;
 
 // 表格列定义
@@ -116,7 +141,7 @@ const rankingColumns = [
     dataIndex: 'amount',
     key: 'amount',
     width: 120,
-    render: (_, record) => `¥${record.amount || 0}`,
+    customRender: ({ record }) => `¥${record.amount || 0}`,
   },
   {
     title: '库存',

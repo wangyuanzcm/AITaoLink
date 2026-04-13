@@ -14,7 +14,6 @@ import java.util.Date;
 /**
  * 代发结算流水记录
  */
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("taolink_settlement_record")
@@ -106,4 +105,158 @@ public class TaolinkSettlementRecord implements Serializable {
      * 更新时间
      */
     private Date updateTime;
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public TaolinkSettlementRecord setId(String id) {
+        this.id = id;
+        return this;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public TaolinkSettlementRecord setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+        return this;
+    }
+
+    public String getShopId() {
+        return shopId;
+    }
+
+    public TaolinkSettlementRecord setShopId(String shopId) {
+        this.shopId = shopId;
+        return this;
+    }
+
+    public String getSettleType() {
+        return settleType;
+    }
+
+    public TaolinkSettlementRecord setSettleType(String settleType) {
+        this.settleType = settleType;
+        return this;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public TaolinkSettlementRecord setAmount(BigDecimal amount) {
+        this.amount = amount;
+        return this;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public TaolinkSettlementRecord setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+        return this;
+    }
+
+    public String getSupplierId() {
+        return supplierId;
+    }
+
+    public TaolinkSettlementRecord setSupplierId(String supplierId) {
+        this.supplierId = supplierId;
+        return this;
+    }
+
+    public String getPurchaseId() {
+        return purchaseId;
+    }
+
+    public TaolinkSettlementRecord setPurchaseId(String purchaseId) {
+        this.purchaseId = purchaseId;
+        return this;
+    }
+
+    public String getPurchaseLineId() {
+        return purchaseLineId;
+    }
+
+    public TaolinkSettlementRecord setPurchaseLineId(String purchaseLineId) {
+        this.purchaseLineId = purchaseLineId;
+        return this;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public TaolinkSettlementRecord setOrderId(String orderId) {
+        this.orderId = orderId;
+        return this;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public TaolinkSettlementRecord setStatus(String status) {
+        this.status = status;
+        return this;
+    }
+
+    public Date getSettleTime() {
+        return settleTime;
+    }
+
+    public TaolinkSettlementRecord setSettleTime(Date settleTime) {
+        this.settleTime = settleTime;
+        return this;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public TaolinkSettlementRecord setRemark(String remark) {
+        this.remark = remark;
+        return this;
+    }
+
+    public String getCreateBy() {
+        return createBy;
+    }
+
+    public TaolinkSettlementRecord setCreateBy(String createBy) {
+        this.createBy = createBy;
+        return this;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public TaolinkSettlementRecord setCreateTime(Date createTime) {
+        this.createTime = createTime;
+        return this;
+    }
+
+    public String getUpdateBy() {
+        return updateBy;
+    }
+
+    public TaolinkSettlementRecord setUpdateBy(String updateBy) {
+        this.updateBy = updateBy;
+        return this;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public TaolinkSettlementRecord setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+        return this;
+    }
 }

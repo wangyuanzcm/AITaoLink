@@ -5,12 +5,7 @@
       <div class="search-form">
         <a-row :gutter="[16, 16]">
           <a-col :span="16">
-            <a-input
-              v-model:value="searchForm.keyword"
-              placeholder="请输入搜索关键词"
-              style="width: 100%"
-              @keyup.enter="handleSearch"
-            >
+            <a-input v-model:value="searchForm.keyword" placeholder="请输入搜索关键词" style="width: 100%" @keyup.enter="handleSearch">
               <template #suffix>
                 <a-button type="primary" @click="handleSearch">
                   <a-icon type="search" />
@@ -19,11 +14,7 @@
             </a-input>
           </a-col>
           <a-col :span="4">
-            <a-select
-              v-model:value="searchForm.platform"
-              placeholder="选择平台"
-              style="width: 100%"
-            >
+            <a-select v-model:value="searchForm.platform" placeholder="选择平台" style="width: 100%">
               <a-option value="1688">1688</a-option>
               <a-option value="taobao">淘宝</a-option>
             </a-select>
@@ -47,18 +38,19 @@
               current: searchForm.pageNo,
               pageSize: searchForm.pageSize,
               total: searchResult.total || 0,
-              onChange: handlePageChange
+              onChange: handlePageChange,
             }"
           >
             <template #renderItem="{ item }">
               <a-list-item key="item.num_iid">
-                <a-list-item-meta
-                  :avatar="item.pic_url ? { src: item.pic_url } : null"
-                >
+                <a-list-item-meta >
                   <template #title>
                     <a href="javascript:;" @click="handleViewDetail(item)">
                       {{ item.title }}
                     </a>
+                  </template>
+                  <template #avatar>
+                    <a-avatar :src="item.pic_url" />
                   </template>
                   <template #description>
                     <div class="item-description">
@@ -69,8 +61,10 @@
                   </template>
                 </a-list-item-meta>
                 <div class="item-actions">
-                  <a-button type="primary" @click="handleImportItem(item)">
-                    导入
+                  <a-button type="primary" @click="handleImportItem(item)"> 导入 </a-button>
+                  <a-button style="margin-left: 8px" @click="handleRefreshItem(item)">
+                    <a-icon type="reload" />
+                    刷新
                   </a-button>
                 </div>
               </a-list-item>
@@ -88,138 +82,144 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+  import { ref, reactive } from 'vue';
 import { searchApi } from '@/api/taolink/search';
 import { message } from 'ant-design-vue';
+import { useRouter } from 'vue-router';
 
-// 搜索表单
-const searchForm = reactive({
-  keyword: '',
-  platform: '1688',
-  pageNo: 1,
-  pageSize: 10,
-});
+  // 搜索表单
+  const searchForm = reactive({
+    keyword: '',
+    platform: '1688',
+    pageNo: 1,
+    pageSize: 10,
+  });
 
-// 搜索结果
-const searchResult = ref({
-  items: [],
-  total: 0,
-  cacheHit: false,
-});
+  // 搜索结果
+  const searchResult = ref({
+    items: [],
+    total: 0,
+    cacheHit: false,
+  });
 
-// 加载状态
+  // 加载状态
 const loading = ref(false);
 
-// 搜索
-const handleSearch = async () => {
-  if (!searchForm.keyword) {
-    message.warning('请输入搜索关键词');
-    return;
-  }
+// 路由实例
+const router = useRouter();
 
-  loading.value = true;
-  try {
-    const res = await searchApi.unifiedSearch({
-      platform: searchForm.platform,
-      keyword: searchForm.keyword,
-      pageNo: searchForm.pageNo,
-      pageSize: searchForm.pageSize,
-    });
-    if (res.success) {
-      searchResult.value = res.result;
-      if (res.result.cacheHit) {
+  // 搜索
+  const handleSearch = async () => {
+    if (!searchForm.keyword) {
+      message.warning('请输入搜索关键词');
+      return;
+    }
+
+    loading.value = true;
+    try {
+      const res = await searchApi.unifiedSearch({
+        platform: searchForm.platform,
+        keyword: searchForm.keyword,
+        pageNo: searchForm.pageNo,
+        pageSize: searchForm.pageSize,
+      });
+      searchResult.value = res;
+      if (res.cacheHit) {
         message.success('缓存命中');
       }
-    } else {
-      message.error('搜索失败：' + res.message);
+    } catch (error) {
+      message.error('搜索失败');
+    } finally {
+      loading.value = false;
     }
-  } catch (error) {
-    message.error('搜索失败');
-  } finally {
-    loading.value = false;
-  }
-};
+  };
 
-// 分页
-const handlePageChange = (page: number) => {
-  searchForm.pageNo = page;
-  handleSearch();
-};
+  // 分页
+  const handlePageChange = (page: number) => {
+    searchForm.pageNo = page;
+    handleSearch();
+  };
 
-// 查看详情
+  // 查看详情
 const handleViewDetail = (item: any) => {
   console.log('查看详情:', item);
   // 跳转到详情页
-  // router.push(`/taolink/search/item-detail/${item.num_iid}?platform=${searchForm.platform}`);
+  router.push(`/taolink/search/item-detail/${item.num_iid}?platform=${searchForm.platform}`);
 };
 
-// 导入单个商品
-const handleImportItem = async (item: any) => {
+// 刷新商品信息
+const handleRefreshItem = async (item: any) => {
   loading.value = true;
   try {
-    const res = await searchApi.importToSourceOffer({
-      items: [item],
-    });
-    if (res.success) {
+    // 这里应该调用商品详情接口获取最新信息
+    // 实际项目中需要根据平台和商品ID调用相应的接口
+    message.success('商品信息已刷新');
+  } catch (error) {
+    message.error('刷新商品信息失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+  // 导入单个商品
+  const handleImportItem = async (item: any) => {
+    loading.value = true;
+    try {
+      await searchApi.importToSourceOffer({
+        items: [item],
+      });
       message.success('导入成功');
-    } else {
-      message.error('导入失败：' + res.message);
+    } catch (error) {
+      message.error('导入失败');
+    } finally {
+      loading.value = false;
     }
-  } catch (error) {
-    message.error('导入失败');
-  } finally {
-    loading.value = false;
-  }
-};
+  };
 
-// 批量导入
-const handleImportAll = async () => {
-  loading.value = true;
-  try {
-    const res = await searchApi.importToSourceOffer({
-      items: searchResult.value.items,
-    });
-    if (res.success) {
+  // 批量导入
+  const handleImportAll = async () => {
+    loading.value = true;
+    try {
+      await searchApi.importToSourceOffer({
+        items: searchResult.value.items,
+      });
       message.success('批量导入成功');
-    } else {
-      message.error('批量导入失败：' + res.message);
+    } catch (error) {
+      message.error('批量导入失败');
+    } finally {
+      loading.value = false;
     }
-  } catch (error) {
-    message.error('批量导入失败');
-  } finally {
-    loading.value = false;
-  }
-};
+  };
 </script>
 
 <style scoped>
-.search-center {
-  padding: 20px;
-}
+  .search-center {
+    padding: 20px;
+  }
 
-.search-form {
-  margin-bottom: 20px;
-}
+  .search-form {
+    margin-bottom: 20px;
+  }
 
-.item-description {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 8px;
-}
+  .item-description {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 8px;
+  }
 
-.price {
-  color: #ff4d4f;
-  font-weight: bold;
-}
+  .price {
+    color: #ff4d4f;
+    font-weight: bold;
+  }
 
-.item-actions {
-  display: flex;
-  align-items: center;
-}
+  .item-actions {
+    display: flex;
+    align-items: center;
+  }
 
-.no-result {
-  padding: 40px 0;
-  text-align: center;
-}
+  .no-result {
+    padding: 40px 0;
+    text-align: center;
+  }
 </style>

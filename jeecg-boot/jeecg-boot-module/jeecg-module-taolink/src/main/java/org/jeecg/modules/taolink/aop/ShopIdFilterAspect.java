@@ -23,6 +23,7 @@ import java.util.List;
 @Aspect
 @Component
 public class ShopIdFilterAspect {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShopIdFilterAspect.class);
 
     @Autowired
     private ITaolinkShopService taolinkShopService;

@@ -17,6 +17,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class InventoryAlertCheckJob implements Job {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InventoryAlertCheckJob.class);
 
     @Autowired
     private ITaolinkInventoryService taolinkInventoryService;

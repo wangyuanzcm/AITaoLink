@@ -73,12 +73,44 @@ public class TaolinkOrderController extends JeecgController<TaolinkOrder, ITaoli
         return Result.OK(entity);
     }
 
-    @Data
     public static class AssignFulfillmentRequest {
         private String orderId;
         private String fulfillmentType; // stock 或 dropship
         private String warehouseId; // 当 fulfillmentType 为 stock 时必填
         private String supplierId; // 当 fulfillmentType 为 dropship 时必填
+
+        // Getters and Setters
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String orderId) {
+            this.orderId = orderId;
+        }
+
+        public String getFulfillmentType() {
+            return fulfillmentType;
+        }
+
+        public void setFulfillmentType(String fulfillmentType) {
+            this.fulfillmentType = fulfillmentType;
+        }
+
+        public String getWarehouseId() {
+            return warehouseId;
+        }
+
+        public void setWarehouseId(String warehouseId) {
+            this.warehouseId = warehouseId;
+        }
+
+        public String getSupplierId() {
+            return supplierId;
+        }
+
+        public void setSupplierId(String supplierId) {
+            this.supplierId = supplierId;
+        }
     }
 
     @Operation(summary = "订单履约分配")

@@ -62,11 +62,35 @@ public class TaolinkPurchaseLineController extends JeecgController<TaolinkPurcha
         return Result.OK("回填成功！");
     }
 
-    @Data
     public static class FillTrackingRequest {
         private String purchaseLineId;
         private String trackingCompany;
         private String trackingNo;
+
+        // Getters and Setters
+        public String getPurchaseLineId() {
+            return purchaseLineId;
+        }
+
+        public void setPurchaseLineId(String purchaseLineId) {
+            this.purchaseLineId = purchaseLineId;
+        }
+
+        public String getTrackingCompany() {
+            return trackingCompany;
+        }
+
+        public void setTrackingCompany(String trackingCompany) {
+            this.trackingCompany = trackingCompany;
+        }
+
+        public String getTrackingNo() {
+            return trackingNo;
+        }
+
+        public void setTrackingNo(String trackingNo) {
+            this.trackingNo = trackingNo;
+        }
 
         public void check() {
             if (purchaseLineId == null || purchaseLineId.isEmpty()) {

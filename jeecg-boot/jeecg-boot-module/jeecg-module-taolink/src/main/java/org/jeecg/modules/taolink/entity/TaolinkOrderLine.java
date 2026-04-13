@@ -9,7 +9,6 @@ import org.jeecg.common.system.base.entity.JeecgEntity;
 
 import java.io.Serializable;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "订单行")
@@ -34,5 +33,60 @@ public class TaolinkOrderLine extends JeecgEntity implements Serializable {
 
     @Schema(description = "履约状态", example = "unassigned")
     private String fulfillmentStatus;
+
+    // Getters and Setters
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public TaolinkOrderLine setOrderId(String orderId) {
+        this.orderId = orderId;
+        return this;
+    }
+
+    public String getProductSkuId() {
+        return productSkuId;
+    }
+
+    public TaolinkOrderLine setProductSkuId(String productSkuId) {
+        this.productSkuId = productSkuId;
+        return this;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public TaolinkOrderLine setQty(Integer qty) {
+        this.qty = qty;
+        return this;
+    }
+
+    public Integer getSalePrice() {
+        return salePrice;
+    }
+
+    public TaolinkOrderLine setSalePrice(Integer salePrice) {
+        this.salePrice = salePrice;
+        return this;
+    }
+
+    public String getFulfillmentMode() {
+        return fulfillmentMode;
+    }
+
+    public TaolinkOrderLine setFulfillmentMode(String fulfillmentMode) {
+        this.fulfillmentMode = fulfillmentMode;
+        return this;
+    }
+
+    public String getFulfillmentStatus() {
+        return fulfillmentStatus;
+    }
+
+    public TaolinkOrderLine setFulfillmentStatus(String fulfillmentStatus) {
+        this.fulfillmentStatus = fulfillmentStatus;
+        return this;
+    }
 }
 

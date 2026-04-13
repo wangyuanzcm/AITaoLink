@@ -87,15 +87,23 @@
 import { ref, onMounted } from 'vue';
 import { message, Modal } from 'ant-design-vue';
 import { SearchOutlined } from '@ant-design/icons-vue';
-import { useStore } from 'pinia';
-import { taolinkStore } from '@/store/modules/taolink';
+import { useTaolinkStore } from '/@/store/modules/taolink';
 
-// 状态管理
-const store = useStore();
-const taolink = taolinkStore();
+defineOptions({ name: 'TaolinkMonitorAlerts' });
+
+const taolink = useTaolinkStore();
 
 // 响应式数据
-const alerts = ref([]);
+interface AlertItem {
+  id: string;
+  alertType: string;
+  target: string;
+  message: string;
+  createdAt: string;
+  status: string;
+}
+
+const alerts = ref<AlertItem[]>([]);
 const loading = ref(false);
 const page = ref({
   current: 1,
@@ -152,7 +160,7 @@ const alertColumns = [
 ];
 
 // 获取告警类型颜色
-const getAlertTypeColor = (type) => {
+const getAlertTypeColor = (type: string) => {
   const colorMap = {
     'low_stock': 'red',
     'overstock': 'orange',
@@ -163,7 +171,7 @@ const getAlertTypeColor = (type) => {
 };
 
 // 获取告警类型文本
-const getAlertTypeText = (type) => {
+const getAlertTypeText = (type: string) => {
   const textMap = {
     'low_stock': '低库存',
     'overstock': '积压库存',
@@ -174,7 +182,7 @@ const getAlertTypeText = (type) => {
 };
 
 // 处理分页变化
-const handlePageChange = (current, pageSize) => {
+const handlePageChange = (current: number, pageSize: number) => {
   page.value.current = current;
   page.value.size = pageSize;
   getAlerts();
@@ -197,10 +205,10 @@ const resetFilter = () => {
 };
 
 // 处理解决告警
-const handleResolve = (record) => {
+const handleResolve = (record: AlertItem) => {
   Modal.confirm({
     title: '确认解决告警',
-    content: `确定要解决该告警吗？`,
+    content: `确定要解决该告警(${record.id})吗？`,
     onOk: async () => {
       try {
         // 模拟接口调用

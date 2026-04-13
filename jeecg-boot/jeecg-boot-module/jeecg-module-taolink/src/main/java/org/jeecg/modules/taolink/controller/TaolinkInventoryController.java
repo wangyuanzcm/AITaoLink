@@ -106,13 +106,53 @@ public class TaolinkInventoryController extends JeecgController<TaolinkInventory
         return taolinkInventoryService.adjustOnHand(req.getWarehouseId(), req.getProductSkuId(), req.getQty(), req.getRefType(), req.getRefId());
     }
 
-    @Data
     public static class InventoryActionRequest {
         private String warehouseId;
         private String productSkuId;
         private Integer qty;
         private String refType;
         private String refId;
+
+        // Getters and Setters
+        public String getWarehouseId() {
+            return warehouseId;
+        }
+
+        public void setWarehouseId(String warehouseId) {
+            this.warehouseId = warehouseId;
+        }
+
+        public String getProductSkuId() {
+            return productSkuId;
+        }
+
+        public void setProductSkuId(String productSkuId) {
+            this.productSkuId = productSkuId;
+        }
+
+        public Integer getQty() {
+            return qty;
+        }
+
+        public void setQty(Integer qty) {
+            this.qty = qty;
+        }
+
+        public String getRefType() {
+            return refType;
+        }
+
+        public void setRefType(String refType) {
+            this.refType = refType;
+        }
+
+        public String getRefId() {
+            return refId;
+        }
+
+        public void setRefId(String refId) {
+            this.refId = refId;
+        }
 
         public Result<String> check() {
             if (oConvertUtils.isEmpty(warehouseId)) {
@@ -140,10 +180,26 @@ public class TaolinkInventoryController extends JeecgController<TaolinkInventory
         return taolinkInventoryService.getInventoryAnalysisMetrics();
     }
 
-    @Data
     public static class ThresholdRequest {
         private Integer warningMin;
         private Integer overstockDays;
+
+        // Getters and Setters
+        public Integer getWarningMin() {
+            return warningMin;
+        }
+
+        public void setWarningMin(Integer warningMin) {
+            this.warningMin = warningMin;
+        }
+
+        public Integer getOverstockDays() {
+            return overstockDays;
+        }
+
+        public void setOverstockDays(Integer overstockDays) {
+            this.overstockDays = overstockDays;
+        }
     }
 
     @Operation(summary = "设置SKU预警阈值")

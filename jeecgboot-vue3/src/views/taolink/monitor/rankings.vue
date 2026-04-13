@@ -64,19 +64,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { ref, onMounted, h } from 'vue';
+import { message, Tag } from 'ant-design-vue';
 import { DownloadOutlined } from '@ant-design/icons-vue';
-import { useStore } from 'pinia';
-import { taolinkStore } from '@/store/modules/taolink';
+import { useTaolinkStore } from '/@/store/modules/taolink';
 
-// 状态管理
-const store = useStore();
-const taolink = taolinkStore();
+defineOptions({ name: 'TaolinkMonitorRankings' });
+
+const taolink = useTaolinkStore();
 
 // 响应式数据
 const rankingType = ref('sales');
-const rankings = ref([]);
+interface RankingItem {
+  rank: number;
+  productId: string;
+  productName: string;
+  sales: number;
+  amount: number;
+  inventory: number;
+  status: string;
+}
+
+const rankings = ref<RankingItem[]>([]);
 const loading = ref(false);
 
 // 表格列定义
@@ -116,13 +125,10 @@ const rankingColumns = [
     dataIndex: 'status',
     key: 'status',
     width: 100,
-    render: (_, record) => {
-      return record.status === 'listed' ? (
-        <a-tag color="green">在售</a-tag>
-      ) : (
-        <a-tag color="default">下架</a-tag>
-      );
-    },
+    customRender: ({ record }) =>
+      h(Tag, { color: record.status === 'listed' ? 'green' : 'default' }, () =>
+        record.status === 'listed' ? '在售' : '下架',
+      ),
   },
 ];
 

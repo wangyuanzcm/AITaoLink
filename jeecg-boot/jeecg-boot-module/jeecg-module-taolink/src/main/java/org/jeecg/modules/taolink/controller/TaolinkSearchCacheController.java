@@ -21,8 +21,9 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "TaoLink-搜索缓存")
 @RestController
-@RequestMapping("/taolink/search")
+@RequestMapping("/taolink/search-cache")
 public class TaolinkSearchCacheController extends JeecgController<TaolinkSearchCache, ITaolinkSearchCacheService> {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaolinkSearchCacheController.class);
     @Autowired
     private ITaolinkSearchCacheService taolinkSearchCacheService;
 

@@ -74,13 +74,53 @@ public class TaolinkInventoryAlertController extends JeecgController<TaolinkInve
         return Result.OK(entity);
     }
 
-    @Data
     public static class CreateAlertRequest {
         private String productSkuId;
         private String alertType;
         private Integer threshold;
         private Integer currentValue;
         private String message;
+
+        // Getters and Setters
+        public String getProductSkuId() {
+            return productSkuId;
+        }
+
+        public void setProductSkuId(String productSkuId) {
+            this.productSkuId = productSkuId;
+        }
+
+        public String getAlertType() {
+            return alertType;
+        }
+
+        public void setAlertType(String alertType) {
+            this.alertType = alertType;
+        }
+
+        public Integer getThreshold() {
+            return threshold;
+        }
+
+        public void setThreshold(Integer threshold) {
+            this.threshold = threshold;
+        }
+
+        public Integer getCurrentValue() {
+            return currentValue;
+        }
+
+        public void setCurrentValue(Integer currentValue) {
+            this.currentValue = currentValue;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
 
         public Result<String> check() {
             if (oConvertUtils.isEmpty(productSkuId)) {
@@ -118,9 +158,17 @@ public class TaolinkInventoryAlertController extends JeecgController<TaolinkInve
         return taolinkInventoryAlertService.createAlert(alert);
     }
 
-    @Data
     public static class ResolveAlertRequest {
         private String handler;
+
+        // Getters and Setters
+        public String getHandler() {
+            return handler;
+        }
+
+        public void setHandler(String handler) {
+            this.handler = handler;
+        }
 
         public Result<String> check() {
             if (oConvertUtils.isEmpty(handler)) {

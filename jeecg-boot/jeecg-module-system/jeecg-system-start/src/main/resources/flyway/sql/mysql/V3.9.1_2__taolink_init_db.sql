@@ -147,9 +147,13 @@ CREATE TABLE IF NOT EXISTS taolink_order_line (
 CREATE TABLE IF NOT EXISTS taolink_purchase (
   id varchar(32) NOT NULL,
   create_by varchar(50) DEFAULT NULL,
+  create_by_org varchar(50) DEFAULT NULL,
   create_time datetime DEFAULT NULL,
   update_by varchar(50) DEFAULT NULL,
   update_time datetime DEFAULT NULL,
+  sys_org_code varchar(64) DEFAULT NULL,
+  tenant_id varchar(64) DEFAULT NULL,
+  bpm_status varchar(32) DEFAULT NULL,
   mode varchar(20) NOT NULL,
   supplier_platform varchar(20) DEFAULT NULL,
   status varchar(30) DEFAULT NULL,
@@ -162,9 +166,13 @@ CREATE TABLE IF NOT EXISTS taolink_purchase (
 CREATE TABLE IF NOT EXISTS taolink_purchase_line (
   id varchar(32) NOT NULL,
   create_by varchar(50) DEFAULT NULL,
+  create_by_org varchar(50) DEFAULT NULL,
   create_time datetime DEFAULT NULL,
   update_by varchar(50) DEFAULT NULL,
   update_time datetime DEFAULT NULL,
+  sys_org_code varchar(64) DEFAULT NULL,
+  tenant_id varchar(64) DEFAULT NULL,
+  bpm_status varchar(32) DEFAULT NULL,
   purchase_id varchar(32) NOT NULL,
   source_offer_id varchar(32) NOT NULL,
   source_sku_id varchar(64) DEFAULT NULL,
@@ -192,4 +200,3 @@ CREATE TABLE IF NOT EXISTS taolink_ticket (
   KEY idx_ticket_status (status),
   KEY idx_ticket_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-

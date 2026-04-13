@@ -9,7 +9,6 @@ import org.jeecg.common.system.base.entity.JeecgEntity;
 
 import java.io.Serializable;
 
-@Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @Schema(description = "库存流水")
@@ -34,5 +33,60 @@ public class TaolinkInventoryMovement extends JeecgEntity implements Serializabl
 
     @Schema(description = "关联ID")
     private String refId;
+
+    // Getters and Setters
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public TaolinkInventoryMovement setWarehouseId(String warehouseId) {
+        this.warehouseId = warehouseId;
+        return this;
+    }
+
+    public String getProductSkuId() {
+        return productSkuId;
+    }
+
+    public TaolinkInventoryMovement setProductSkuId(String productSkuId) {
+        this.productSkuId = productSkuId;
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public TaolinkInventoryMovement setType(String type) {
+        this.type = type;
+        return this;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public TaolinkInventoryMovement setQty(Integer qty) {
+        this.qty = qty;
+        return this;
+    }
+
+    public String getRefType() {
+        return refType;
+    }
+
+    public TaolinkInventoryMovement setRefType(String refType) {
+        this.refType = refType;
+        return this;
+    }
+
+    public String getRefId() {
+        return refId;
+    }
+
+    public TaolinkInventoryMovement setRefId(String refId) {
+        this.refId = refId;
+        return this;
+    }
 }
 

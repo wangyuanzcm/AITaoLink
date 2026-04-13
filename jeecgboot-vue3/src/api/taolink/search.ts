@@ -12,6 +12,13 @@ export const searchApi = {
   unifiedSearch: (params: any) => defHttp.get({ url: '/taolink/search/unified', params }),
 
   /**
+   * 商品详情接口
+   * @param params 商品参数
+   * @returns 商品详情
+   */
+  getItemDetail: (params: any) => defHttp.get({ url: '/taolink/search/item-detail', params }),
+
+  /**
    * 搜索结果转 source_offer 落库
    * @param data 搜索结果
    * @returns 导入结果
