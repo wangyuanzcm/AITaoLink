@@ -122,10 +122,7 @@ public class TaolinkShopController extends JeecgController<TaolinkShop, ITaolink
             resp.sendRedirect("/taolink/shop?success=true");
         } catch (IllegalStateException e) {
             resp.sendRedirect("/taolink/shop?error=config_missing");
-        } catch (Exception e) {
-            log.error("OAuth回调处理失败", e);
-            resp.sendRedirect("/taolink/shop?error=callback_failed");
-        }
+        } 
     }
 
     @Operation(summary = "重新授权")
